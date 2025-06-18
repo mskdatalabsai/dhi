@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Check, Sun, Moon } from "lucide-react";
+import { Check, Sun, Moon, Users, Award, Target } from "lucide-react";
 
 const PaymentPage = () => {
   const [isDark, setIsDark] = useState(false);
+  type PricingPlan = (typeof pricingPlans)[number];
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentData, setPaymentData] = useState({
@@ -33,76 +34,82 @@ const PaymentPage = () => {
   };
 
   // Payment plans
+  // Payment plans with more detailed information
   const pricingPlans = [
     {
-      id: "starter",
-      name: "Starter",
-      price: 29,
-      period: "month",
+      id: "beginner",
+      name: "Data Science Foundations",
+      price: 299,
+      originalPrice: 399,
+      period: "course",
+      duration: "6 weeks",
       features: [
-        "Basic Analytics",
-        "Email Support",
-        "5 Team Members",
-        "10GB Storage",
+        "Python Programming Fundamentals",
+        "Statistics & Probability",
+        "Data Analysis with Pandas",
+        "Data Visualization",
+        "Basic SQL Database",
+        "Jupyter Notebooks Mastery",
+        "3 Hands-on Projects",
+        "Course Completion Certificate",
+        "Lifetime Access to Materials",
       ],
       popular: false,
+      level: "Beginner",
     },
     {
       id: "professional",
-      name: "Professional",
-      price: 79,
-      period: "month",
+      name: "Complete Data Science Bootcamp",
+      price: 799,
+      originalPrice: 1199,
+      period: "bootcamp",
+      duration: "16 weeks",
       features: [
+        "Everything in Foundations",
+        "Machine Learning Algorithms",
         "Advanced Analytics",
-        "Priority Support",
-        "25 Team Members",
-        "100GB Storage",
-        "API Access",
+        "Deep Learning Basics",
+        "Real Industry Projects",
+        "Personal Mentorship",
+        "Career Guidance & Resume Review",
+        "Interview Preparation",
+        "Internship Opportunities",
+        "Job Placement Assistance",
+        "6 months post-course support",
       ],
       popular: true,
+      level: "Intermediate to Advanced",
     },
     {
-      id: "enterprise",
-      name: "Enterprise",
-      price: 199,
-      period: "month",
+      id: "master",
+      name: "AI & ML Mastery Program",
+      price: 1299,
+      originalPrice: 1799,
+      period: "program",
+      duration: "24 weeks",
       features: [
-        "Custom Analytics",
-        "24/7 Phone Support",
-        "Unlimited Team Members",
-        "1TB Storage",
-        "Custom Integrations",
-        "Dedicated Manager",
+        "Everything in Bootcamp",
+        "Advanced Deep Learning",
+        "Natural Language Processing",
+        "Computer Vision",
+        "MLOps & Model Deployment",
+        "Research Project Collaboration",
+        "Industry Partnership Projects",
+        "Guaranteed Job Placement*",
+        "1-year continuous mentorship",
+        "Access to MSK Alumni Network",
+        "Conference & Workshop Invitations",
       ],
       popular: false,
+      level: "Advanced & Professional",
     },
   ];
-
-  interface PaymentData {
-    cardNumber: string;
-    expiryDate: string;
-    cvv: string;
-    cardholderName: string;
-    billingAddress: string;
-    city: string;
-    zipCode: string;
-    country: string;
-  }
-
-  interface PricingPlan {
-    id: string;
-    name: string;
-    price: number;
-    period: string;
-    features: string[];
-    popular: boolean;
-  }
 
   const handlePaymentInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setPaymentData((prev: PaymentData) => ({
+    setPaymentData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -162,17 +169,100 @@ const PaymentPage = () => {
 
       <div className="container mx-auto px-6 py-12 max-w-6xl">
         <div className="text-center mb-12">
-          <h1
+          <div className="mb-6">
+            <div
+              className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 mx-auto relative overflow-hidden`}
+            >
+              {/* Custom SVG Logo */}
+              <svg
+                width="80"
+                height="80"
+                viewBox="0 0 80 80"
+                className="absolute inset-0"
+              >
+                <defs>
+                  <linearGradient
+                    id="greenToYellowPayment"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
+                    <stop offset="0%" stopColor="#059669" />
+                    <stop offset="50%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#fbbf24" />
+                  </linearGradient>
+                </defs>
+
+                <rect
+                  x="10"
+                  y="10"
+                  width="25"
+                  height="25"
+                  fill="#047857"
+                  rx="3"
+                  opacity="0.8"
+                />
+                <rect
+                  x="20"
+                  y="20"
+                  width="20"
+                  height="20"
+                  fill="#059669"
+                  rx="5"
+                  opacity="0.9"
+                />
+                <rect
+                  x="30"
+                  y="30"
+                  width="15"
+                  height="15"
+                  fill="#10b981"
+                  rx="7"
+                  opacity="0.9"
+                />
+                <circle cx="50" cy="25" r="8" fill="#fbbf24" opacity="0.9" />
+                <circle cx="55" cy="35" r="6" fill="#f59e0b" opacity="0.8" />
+                <circle cx="45" cy="45" r="4" fill="#eab308" opacity="0.7" />
+                <path
+                  d="M35 37 L47 29"
+                  stroke="url(#greenToYellowPayment)"
+                  strokeWidth="2"
+                  opacity="0.6"
+                />
+                <path
+                  d="M40 45 L50 30"
+                  stroke="url(#greenToYellowPayment)"
+                  strokeWidth="1.5"
+                  opacity="0.5"
+                />
+              </svg>
+            </div>
+            <h1
+              className={`text-4xl font-bold mb-2 ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}
+            >
+              MSK DATALABS.AI
+            </h1>
+            <p className="text-sm text-gray-500 font-medium italic">
+              acquire indefinitely...
+            </p>
+          </div>
+          <h2
             className={`text-4xl font-bold mb-4 ${
               isDark ? "text-white" : "text-gray-900"
             }`}
           >
-            Choose Your Plan
-          </h1>
+            Choose Your Learning Plan
+          </h2>
           <p
-            className={`text-lg ${isDark ? "text-gray-300" : "text-gray-600"}`}
+            className={`text-xl max-w-3xl mx-auto ${
+              isDark ? "text-gray-300" : "text-gray-600"
+            }`}
           >
-            Start your free trial and unlock the full potential of your business
+            Start your data science journey with the perfect training program
+            designed by industry experts from TCS, Oracle, GE, ESPN, and more.
           </p>
         </div>
 
@@ -183,12 +273,12 @@ const PaymentPage = () => {
               key={plan.id}
               className={`relative rounded-2xl p-8 border-2 cursor-pointer transition-all duration-300 ${
                 selectedPlan?.id === plan.id
-                  ? "border-blue-500 shadow-xl scale-105"
+                  ? "border-emerald-600 shadow-xl scale-105"
                   : isDark
                   ? "border-gray-700 hover:border-gray-600"
                   : "border-gray-200 hover:border-gray-300"
               } ${isDark ? "bg-gray-800" : "bg-white"} ${
-                plan.popular ? "ring-2 ring-blue-500" : ""
+                plan.popular ? "ring-2 ring-emerald-600" : ""
               }`}
               onClick={() => setSelectedPlan(plan)}
             >
@@ -242,7 +332,7 @@ const PaymentPage = () => {
               <button
                 className={`w-full py-3 rounded-lg font-medium transition-colors ${
                   selectedPlan?.id === plan.id
-                    ? "bg-blue-600 text-white"
+                    ? "bg-gradient-to-r from-emerald-600 to-green-600 text-white"
                     : isDark
                     ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -254,7 +344,84 @@ const PaymentPage = () => {
           ))}
         </div>
 
-        {/* Payment Form */}
+        {/* Why Choose MSK Datalabs */}
+        <div
+          className={`rounded-2xl p-8 mb-12 border transition-colors duration-300 ${
+            isDark
+              ? "bg-gray-800 border-gray-700"
+              : "bg-white shadow-lg border-gray-200"
+          }`}
+        >
+          <h3
+            className={`text-3xl font-bold text-center mb-8 ${
+              isDark ? "text-white" : "text-gray-900"
+            }`}
+          >
+            Why Choose MSK Datalabs?
+          </h3>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-emerald-600" />
+              </div>
+              <h4
+                className={`text-xl font-bold mb-2 ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Expert Instructors
+              </h4>
+              <p
+                className={`text-sm ${
+                  isDark ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                Learn from industry professionals with 50+ years combined
+                experience from top companies like TCS, Oracle, GE, and ESPN.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Award className="w-8 h-8 text-emerald-600" />
+              </div>
+              <h4
+                className={`text-xl font-bold mb-2 ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Proven Results
+              </h4>
+              <p
+                className={`text-sm ${
+                  isDark ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                85% job placement rate with 2000+ successful graduates now
+                working at leading tech companies worldwide.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Target className="w-8 h-8 text-emerald-600" />
+              </div>
+              <h4
+                className={`text-xl font-bold mb-2 ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Career Focus
+              </h4>
+              <p
+                className={`text-sm ${
+                  isDark ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                Industry-aligned curriculum with hands-on projects, mentorship,
+                and dedicated career support for guaranteed success.
+              </p>
+            </div>
+          </div>
+        </div>
         {selectedPlan && (
           <div
             className={`rounded-2xl p-8 border transition-colors duration-300 ${
@@ -335,7 +502,7 @@ const PaymentPage = () => {
                         isDark
                           ? "bg-gray-700 border-gray-600 text-white"
                           : "bg-gray-50 border-gray-300 text-gray-900"
-                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                      } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                       placeholder="MM/YY"
                     />
                   </div>

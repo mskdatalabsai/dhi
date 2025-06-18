@@ -7,56 +7,35 @@ import {
   User,
   Briefcase,
   Target,
-  FileText,
-  Save,
+  BookOpen,
+  Plus,
   X,
-  ChevronRight,
 } from "lucide-react";
 
-const DescribeYourselfPage = () => {
+const ProfileComponent = () => {
   const [isDark, setIsDark] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
-    {}
-  );
-
-  const [profileData, setProfileData] = useState<ProfileData>({
-    // Personal Information
+  const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
     location: "",
     dateOfBirth: "",
-
-    // Professional Information
     currentRole: "",
     currentCompany: "",
-    experience: "",
+    yearsOfExperience: "",
     industry: "",
-
-    // Career Goals
-    wantedRoles: [],
-    preferredIndustries: [],
+    desiredRoles: [] as string[],
     careerGoals: "",
-
-    // Skills & Bio
-    skills: [],
-    bio: "",
-    linkedin: "",
-    portfolio: "",
-
-    // Additional
-    availability: "",
-    salaryRange: "",
-    workPreference: "",
+    skills: [] as string[],
+    professionalBio: "",
+    linkedinProfile: "",
+    portfolioWebsite: "",
   });
+  const [tempDesiredRole, setTempDesiredRole] = useState("");
+  const [tempSkill, setTempSkill] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const [skillInput, setSkillInput] = useState("");
-  const [roleInput, setRoleInput] = useState("");
-
-  // Load theme on component mount
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) {
@@ -70,200 +49,92 @@ const DescribeYourselfPage = () => {
     localStorage.setItem("theme", newTheme ? "dark" : "light");
   };
 
-  interface ProfileData {
-    [key: string]: string | string[];
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    location: string;
-    dateOfBirth: string;
-    currentRole: string;
-    currentCompany: string;
-    experience: string;
-    industry: string;
-    wantedRoles: string[];
-    preferredIndustries: string[];
-    careerGoals: string;
-    skills: string[];
-    bio: string;
-    linkedin: string;
-    portfolio: string;
-    availability: string;
-    salaryRange: string;
-    workPreference: string;
-  }
-
-  interface ValidationErrors {
-    [key: string]: boolean | string | undefined;
-    firstName?: boolean;
-    lastName?: boolean;
-    email?: boolean | string;
-    currentRole?: boolean;
-    experience?: boolean;
-    wantedRoles?: string;
-  }
-
-  const handleInputChange = (field: keyof ProfileData, value: unknown) => {
-    setProfileData((prev: ProfileData) => ({
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [field]: value as string | string[],
+      [name]: value,
     }));
 
-    // Clear validation error for this field
-    if (validationErrors[field]) {
-      setValidationErrors((prev: ValidationErrors) => ({
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
         ...prev,
-        [field]: false,
+        [name]: "",
       }));
     }
   };
 
-  const addSkill = () => {
-    if (skillInput.trim() && !profileData.skills.includes(skillInput.trim())) {
-      handleInputChange("skills", [...profileData.skills, skillInput.trim()]);
-      setSkillInput("");
-    }
-  };
-
-  interface RemoveSkillFn {
-    (skillToRemove: string): void;
-  }
-
-  const removeSkill: RemoveSkillFn = (skillToRemove) => {
-    handleInputChange(
-      "skills",
-      profileData.skills.filter((skill) => skill !== skillToRemove)
-    );
-  };
-
-  const addWantedRole = () => {
+  const addDesiredRole = () => {
     if (
-      roleInput.trim() &&
-      !profileData.wantedRoles.includes(roleInput.trim())
+      tempDesiredRole.trim() &&
+      !formData.desiredRoles.includes(tempDesiredRole.trim())
     ) {
-      handleInputChange("wantedRoles", [
-        ...profileData.wantedRoles,
-        roleInput.trim(),
-      ]);
-      setRoleInput("");
+      setFormData((prev) => ({
+        ...prev,
+        desiredRoles: [...prev.desiredRoles, tempDesiredRole.trim()],
+      }));
+      setTempDesiredRole("");
     }
   };
 
-  interface RemoveWantedRoleFn {
-    (roleToRemove: string): void;
-  }
+  const removeDesiredRole = (roleToRemove: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      desiredRoles: prev.desiredRoles.filter((role) => role !== roleToRemove),
+    }));
+  };
 
-  const removeWantedRole: RemoveWantedRoleFn = (roleToRemove) => {
-    handleInputChange(
-      "wantedRoles",
-      profileData.wantedRoles.filter((role) => role !== roleToRemove)
-    );
+  const addSkill = () => {
+    if (tempSkill.trim() && !formData.skills.includes(tempSkill.trim())) {
+      setFormData((prev) => ({
+        ...prev,
+        skills: [...prev.skills, tempSkill.trim()],
+      }));
+      setTempSkill("");
+    }
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      skills: prev.skills.filter((skill) => skill !== skillToRemove),
+    }));
   };
 
   const validateForm = () => {
-    const errors: Record<string, boolean | string> = {};
-    const requiredFields = [
-      "firstName",
-      "lastName",
-      "email",
-      "currentRole",
-      "experience",
-    ];
+    const newErrors: Record<string, string> = {};
 
-    requiredFields.forEach((field) => {
-      if (
-        !profileData[field] ||
-        (typeof profileData[field] === "string" &&
-          profileData[field].trim() === "")
-      ) {
-        errors[field] = true;
-      }
-    });
+    if (!formData.firstName.trim())
+      newErrors.firstName = "First name is required";
+    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    if (!formData.currentRole.trim())
+      newErrors.currentRole = "Current role is required";
 
-    if (profileData.email && !/\S+@\S+\.\S+/.test(profileData.email)) {
-      errors.email = "Invalid email format";
-    }
-
-    if (profileData.wantedRoles.length === 0) {
-      errors.wantedRoles = "Please add at least one desired role";
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Prepare data for submission
-      const submissionData = {
-        ...profileData,
-        timestamp: new Date().toISOString(),
-        userId: "user_" + Date.now(), // You'd get this from auth
-      };
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      console.log("Profile submitted:", submissionData);
-
-      // In a real app, you would submit to your database:
-      // const response = await fetch('/api/submit-profile', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(submissionData)
-      // });
-
-      setShowSuccess(true);
-    } catch (error) {
-      console.error("Error submitting profile:", error);
-      alert("Error submitting profile. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+  const handleSubmit = (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+    if (validateForm()) {
+      console.log("Profile Data:", formData);
+      alert("Profile created successfully!");
+      // Here you would typically send to your API
     }
   };
-
-  if (showSuccess) {
-    return (
-      <div
-        className={`min-h-screen flex items-center justify-center ${
-          isDark ? "bg-gray-900" : "bg-gray-50"
-        }`}
-      >
-        <div
-          className={`max-w-md w-full mx-4 p-8 rounded-2xl ${
-            isDark ? "bg-gray-800 text-white" : "bg-white text-gray-900"
-          } shadow-xl text-center`}
-        >
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <User className="w-8 h-8 text-green-600" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">Profile Created!</h2>
-          <p className={`mb-6 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-            Your profile has been successfully created. You can now explore
-            personalized opportunities.
-          </p>
-          <button
-            onClick={() => (window.location.href = "/dashboard")}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
-          >
-            Go to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
       className={`min-h-screen transition-colors duration-300 ${
-        isDark ? "bg-gray-900" : "bg-gray-50"
+        isDark
+          ? "bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900"
+          : "bg-gradient-to-br from-slate-50 via-white to-slate-50"
       }`}
     >
       {/* Theme Toggle */}
@@ -283,39 +154,121 @@ const DescribeYourselfPage = () => {
       <div className="container mx-auto px-6 py-12 max-w-4xl">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1
+          <div className="mb-6">
+            <div
+              className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 mx-auto relative overflow-hidden`}
+            >
+              {/* Custom SVG Logo */}
+              <svg
+                width="80"
+                height="80"
+                viewBox="0 0 80 80"
+                className="absolute inset-0"
+              >
+                <defs>
+                  <linearGradient
+                    id="greenToYellowProfile"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
+                    <stop offset="0%" stopColor="#059669" />
+                    <stop offset="50%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#fbbf24" />
+                  </linearGradient>
+                </defs>
+
+                <rect
+                  x="10"
+                  y="10"
+                  width="25"
+                  height="25"
+                  fill="#047857"
+                  rx="3"
+                  opacity="0.8"
+                />
+                <rect
+                  x="20"
+                  y="20"
+                  width="20"
+                  height="20"
+                  fill="#059669"
+                  rx="5"
+                  opacity="0.9"
+                />
+                <rect
+                  x="30"
+                  y="30"
+                  width="15"
+                  height="15"
+                  fill="#10b981"
+                  rx="7"
+                  opacity="0.9"
+                />
+                <circle cx="50" cy="25" r="8" fill="#fbbf24" opacity="0.9" />
+                <circle cx="55" cy="35" r="6" fill="#f59e0b" opacity="0.8" />
+                <circle cx="45" cy="45" r="4" fill="#eab308" opacity="0.7" />
+                <path
+                  d="M35 37 L47 29"
+                  stroke="url(#greenToYellowProfile)"
+                  strokeWidth="2"
+                  opacity="0.6"
+                />
+                <path
+                  d="M40 45 L50 30"
+                  stroke="url(#greenToYellowProfile)"
+                  strokeWidth="1.5"
+                  opacity="0.5"
+                />
+              </svg>
+            </div>
+            <h1
+              className={`text-3xl font-bold mb-2 ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}
+            >
+              MSK DATALABS.AI
+            </h1>
+            <p className="text-sm text-gray-500 font-medium italic">
+              acquire indefinitely...
+            </p>
+          </div>
+          <h2
             className={`text-4xl font-bold mb-4 ${
               isDark ? "text-white" : "text-gray-900"
             }`}
           >
             Tell Us About Yourself
-          </h1>
+          </h2>
           <p
-            className={`text-lg ${isDark ? "text-gray-300" : "text-gray-600"}`}
+            className={`text-lg max-w-2xl mx-auto ${
+              isDark ? "text-gray-300" : "text-gray-600"
+            }`}
           >
             Help us create your professional profile and find the perfect
             opportunities
           </p>
         </div>
 
-        <div className="space-y-8">
-          {/* Personal Information Section */}
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Personal Information */}
           <div
-            className={`rounded-2xl p-8 shadow-xl border transition-colors duration-300 ${
+            className={`rounded-2xl p-8 border transition-colors duration-300 ${
               isDark
                 ? "bg-gray-800 border-gray-700"
-                : "bg-white border-gray-200"
+                : "bg-white shadow-lg border-gray-200"
             }`}
           >
-            <div className="flex items-center space-x-3 mb-6">
-              <User className="w-6 h-6 text-blue-600" />
-              <h2
-                className={`text-2xl font-semibold ${
+            <div className="flex items-center mb-6">
+              <User className="w-6 h-6 text-emerald-600 mr-3" />
+              <h3
+                className={`text-2xl font-bold ${
                   isDark ? "text-white" : "text-gray-900"
                 }`}
               >
                 Personal Information
-              </h2>
+              </h3>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -329,21 +282,27 @@ const DescribeYourselfPage = () => {
                 </label>
                 <input
                   type="text"
-                  value={profileData.firstName}
-                  onChange={(e) =>
-                    handleInputChange("firstName", e.target.value)
-                  }
-                  className={`w-full px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    validationErrors.firstName
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                    errors.firstName
                       ? "border-red-500"
                       : isDark
                       ? "border-gray-600"
                       : "border-gray-300"
                   } ${
-                    isDark ? "bg-gray-700 text-white" : "bg-white text-gray-900"
-                  }`}
+                    isDark
+                      ? "bg-gray-700 text-white placeholder-gray-400"
+                      : "bg-gray-50 text-gray-900 placeholder-gray-500"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                   placeholder="Enter your first name"
                 />
+                {errors.firstName && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.firstName}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -356,21 +315,25 @@ const DescribeYourselfPage = () => {
                 </label>
                 <input
                   type="text"
-                  value={profileData.lastName}
-                  onChange={(e) =>
-                    handleInputChange("lastName", e.target.value)
-                  }
-                  className={`w-full px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    validationErrors.lastName
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                    errors.lastName
                       ? "border-red-500"
                       : isDark
                       ? "border-gray-600"
                       : "border-gray-300"
                   } ${
-                    isDark ? "bg-gray-700 text-white" : "bg-white text-gray-900"
-                  }`}
+                    isDark
+                      ? "bg-gray-700 text-white placeholder-gray-400"
+                      : "bg-gray-50 text-gray-900 placeholder-gray-500"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                   placeholder="Enter your last name"
                 />
+                {errors.lastName && (
+                  <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
+                )}
               </div>
 
               <div>
@@ -383,25 +346,25 @@ const DescribeYourselfPage = () => {
                 </label>
                 <input
                   type="email"
-                  value={profileData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  className={`w-full px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    validationErrors.email
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                    errors.email
                       ? "border-red-500"
                       : isDark
                       ? "border-gray-600"
                       : "border-gray-300"
                   } ${
-                    isDark ? "bg-gray-700 text-white" : "bg-white text-gray-900"
-                  }`}
+                    isDark
+                      ? "bg-gray-700 text-white placeholder-gray-400"
+                      : "bg-gray-50 text-gray-900 placeholder-gray-500"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                   placeholder="your.email@company.com"
                 />
-                {validationErrors.email &&
-                  typeof validationErrors.email === "string" && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {validationErrors.email}
-                    </p>
-                  )}
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                )}
               </div>
 
               <div>
@@ -414,13 +377,14 @@ const DescribeYourselfPage = () => {
                 </label>
                 <input
                   type="tel"
-                  value={profileData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  className={`w-full px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 rounded-lg border transition-colors ${
                     isDark
-                      ? "border-gray-600 bg-gray-700 text-white"
-                      : "border-gray-300 bg-white text-gray-900"
-                  }`}
+                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                      : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                   placeholder="+1 (555) 123-4567"
                 />
               </div>
@@ -435,15 +399,14 @@ const DescribeYourselfPage = () => {
                 </label>
                 <input
                   type="text"
-                  value={profileData.location}
-                  onChange={(e) =>
-                    handleInputChange("location", e.target.value)
-                  }
-                  className={`w-full px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  name="location"
+                  value={formData.location}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 rounded-lg border transition-colors ${
                     isDark
-                      ? "border-gray-600 bg-gray-700 text-white"
-                      : "border-gray-300 bg-white text-gray-900"
-                  }`}
+                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                      : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                   placeholder="City, State/Country"
                 />
               </div>
@@ -458,37 +421,36 @@ const DescribeYourselfPage = () => {
                 </label>
                 <input
                   type="date"
-                  value={profileData.dateOfBirth}
-                  onChange={(e) =>
-                    handleInputChange("dateOfBirth", e.target.value)
-                  }
-                  className={`w-full px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 rounded-lg border transition-colors ${
                     isDark
-                      ? "border-gray-600 bg-gray-700 text-white"
-                      : "border-gray-300 bg-white text-gray-900"
-                  }`}
+                      ? "bg-gray-700 border-gray-600 text-white"
+                      : "bg-gray-50 border-gray-300 text-gray-900"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                 />
               </div>
             </div>
           </div>
 
-          {/* Professional Information Section */}
+          {/* Professional Information */}
           <div
-            className={`rounded-2xl p-8 shadow-xl border transition-colors duration-300 ${
+            className={`rounded-2xl p-8 border transition-colors duration-300 ${
               isDark
                 ? "bg-gray-800 border-gray-700"
-                : "bg-white border-gray-200"
+                : "bg-white shadow-lg border-gray-200"
             }`}
           >
-            <div className="flex items-center space-x-3 mb-6">
-              <Briefcase className="w-6 h-6 text-blue-600" />
-              <h2
-                className={`text-2xl font-semibold ${
+            <div className="flex items-center mb-6">
+              <Briefcase className="w-6 h-6 text-emerald-600 mr-3" />
+              <h3
+                className={`text-2xl font-bold ${
                   isDark ? "text-white" : "text-gray-900"
                 }`}
               >
                 Professional Information
-              </h2>
+              </h3>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -502,21 +464,27 @@ const DescribeYourselfPage = () => {
                 </label>
                 <input
                   type="text"
-                  value={profileData.currentRole}
-                  onChange={(e) =>
-                    handleInputChange("currentRole", e.target.value)
-                  }
-                  className={`w-full px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    validationErrors.currentRole
+                  name="currentRole"
+                  value={formData.currentRole}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                    errors.currentRole
                       ? "border-red-500"
                       : isDark
                       ? "border-gray-600"
                       : "border-gray-300"
                   } ${
-                    isDark ? "bg-gray-700 text-white" : "bg-white text-gray-900"
-                  }`}
+                    isDark
+                      ? "bg-gray-700 text-white placeholder-gray-400"
+                      : "bg-gray-50 text-gray-900 placeholder-gray-500"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                   placeholder="e.g., Software Engineer, Marketing Manager"
                 />
+                {errors.currentRole && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.currentRole}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -529,15 +497,14 @@ const DescribeYourselfPage = () => {
                 </label>
                 <input
                   type="text"
-                  value={profileData.currentCompany}
-                  onChange={(e) =>
-                    handleInputChange("currentCompany", e.target.value)
-                  }
-                  className={`w-full px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  name="currentCompany"
+                  value={formData.currentCompany}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 rounded-lg border transition-colors ${
                     isDark
-                      ? "border-gray-600 bg-gray-700 text-white"
-                      : "border-gray-300 bg-white text-gray-900"
-                  }`}
+                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                      : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                   placeholder="Company name"
                 />
               </div>
@@ -551,26 +518,21 @@ const DescribeYourselfPage = () => {
                   Years of Experience *
                 </label>
                 <select
-                  value={profileData.experience}
-                  onChange={(e) =>
-                    handleInputChange("experience", e.target.value)
-                  }
-                  className={`w-full px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    validationErrors.experience
-                      ? "border-red-500"
-                      : isDark
-                      ? "border-gray-600"
-                      : "border-gray-300"
-                  } ${
-                    isDark ? "bg-gray-700 text-white" : "bg-white text-gray-900"
-                  }`}
+                  name="yearsOfExperience"
+                  value={formData.yearsOfExperience}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                    isDark
+                      ? "bg-gray-700 border-gray-600 text-white"
+                      : "bg-gray-50 border-gray-300 text-gray-900"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                 >
                   <option value="">Select experience level</option>
-                  <option value="0-1">0-1 years (Entry Level)</option>
-                  <option value="2-3">2-3 years (Junior)</option>
-                  <option value="4-6">4-6 years (Mid-level)</option>
-                  <option value="7-10">7-10 years (Senior)</option>
-                  <option value="10+">10+ years (Expert/Lead)</option>
+                  <option value="0-1">0-1 years</option>
+                  <option value="2-3">2-3 years</option>
+                  <option value="4-6">4-6 years</option>
+                  <option value="7-10">7-10 years</option>
+                  <option value="10+">10+ years</option>
                 </select>
               </div>
 
@@ -583,47 +545,46 @@ const DescribeYourselfPage = () => {
                   Industry
                 </label>
                 <select
-                  value={profileData.industry}
-                  onChange={(e) =>
-                    handleInputChange("industry", e.target.value)
-                  }
-                  className={`w-full px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  name="industry"
+                  value={formData.industry}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 rounded-lg border transition-colors ${
                     isDark
-                      ? "border-gray-600 bg-gray-700 text-white"
-                      : "border-gray-300 bg-white text-gray-900"
-                  }`}
+                      ? "bg-gray-700 border-gray-600 text-white"
+                      : "bg-gray-50 border-gray-300 text-gray-900"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                 >
                   <option value="">Select industry</option>
-                  <option value="technology">Technology</option>
-                  <option value="healthcare">Healthcare</option>
-                  <option value="finance">Finance</option>
-                  <option value="education">Education</option>
-                  <option value="retail">Retail</option>
-                  <option value="manufacturing">Manufacturing</option>
-                  <option value="consulting">Consulting</option>
-                  <option value="other">Other</option>
+                  <option value="Technology">Technology</option>
+                  <option value="Healthcare">Healthcare</option>
+                  <option value="Finance">Finance</option>
+                  <option value="Education">Education</option>
+                  <option value="Retail">Retail</option>
+                  <option value="Manufacturing">Manufacturing</option>
+                  <option value="Consulting">Consulting</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
             </div>
           </div>
 
-          {/* Career Goals Section */}
+          {/* Career Goals & Aspirations */}
           <div
-            className={`rounded-2xl p-8 shadow-xl border transition-colors duration-300 ${
+            className={`rounded-2xl p-8 border transition-colors duration-300 ${
               isDark
                 ? "bg-gray-800 border-gray-700"
-                : "bg-white border-gray-200"
+                : "bg-white shadow-lg border-gray-200"
             }`}
           >
-            <div className="flex items-center space-x-3 mb-6">
-              <Target className="w-6 h-6 text-blue-600" />
-              <h2
-                className={`text-2xl font-semibold ${
+            <div className="flex items-center mb-6">
+              <Target className="w-6 h-6 text-emerald-600 mr-3" />
+              <h3
+                className={`text-2xl font-bold ${
                   isDark ? "text-white" : "text-gray-900"
                 }`}
               >
                 Career Goals & Aspirations
-              </h2>
+              </h3>
             </div>
 
             <div className="space-y-6">
@@ -633,49 +594,49 @@ const DescribeYourselfPage = () => {
                     isDark ? "text-gray-300" : "text-gray-700"
                   }`}
                 >
-                  Desired Roles *
+                  Desired Roles
                 </label>
-                <div className="flex space-x-2 mb-3">
+                <div className="flex gap-2 mb-3">
                   <input
                     type="text"
-                    value={roleInput}
-                    onChange={(e) => setRoleInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && addWantedRole()}
-                    className={`flex-1 px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    value={tempDesiredRole}
+                    onChange={(e) => setTempDesiredRole(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" &&
+                      (e.preventDefault(), addDesiredRole())
+                    }
+                    className={`flex-1 px-4 py-3 rounded-lg border transition-colors ${
                       isDark
-                        ? "border-gray-600 bg-gray-700 text-white"
-                        : "border-gray-300 bg-white text-gray-900"
-                    }`}
+                        ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                        : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500"
+                    } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                     placeholder="e.g., Senior Developer, Product Manager"
                   />
                   <button
-                    onClick={addWantedRole}
-                    className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    type="button"
+                    onClick={addDesiredRole}
+                    className="px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
                   >
-                    Add
+                    <Plus className="w-5 h-5" />
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {profileData.wantedRoles.map((role, index) => (
+                  {formData.desiredRoles.map((role, index) => (
                     <span
                       key={index}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-emerald-100 text-emerald-800"
                     >
                       {role}
                       <button
-                        onClick={() => removeWantedRole(role)}
-                        className="ml-2 text-blue-600 hover:text-blue-800"
+                        type="button"
+                        onClick={() => removeDesiredRole(role)}
+                        className="ml-2 text-emerald-600 hover:text-emerald-800"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </span>
                   ))}
                 </div>
-                {validationErrors.wantedRoles && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {validationErrors.wantedRoles}
-                  </p>
-                )}
               </div>
 
               <div>
@@ -687,39 +648,38 @@ const DescribeYourselfPage = () => {
                   Career Goals
                 </label>
                 <textarea
-                  value={profileData.careerGoals}
-                  onChange={(e) =>
-                    handleInputChange("careerGoals", e.target.value)
-                  }
-                  className={`w-full px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    isDark
-                      ? "border-gray-600 bg-gray-700 text-white"
-                      : "border-gray-300 bg-white text-gray-900"
-                  }`}
+                  name="careerGoals"
+                  value={formData.careerGoals}
+                  onChange={handleInputChange}
                   rows={4}
+                  className={`w-full px-4 py-3 rounded-lg border transition-colors resize-none ${
+                    isDark
+                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                      : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                   placeholder="Describe your career aspirations and goals..."
                 />
               </div>
             </div>
           </div>
 
-          {/* Skills & Bio Section */}
+          {/* Skills & Biography */}
           <div
-            className={`rounded-2xl p-8 shadow-xl border transition-colors duration-300 ${
+            className={`rounded-2xl p-8 border transition-colors duration-300 ${
               isDark
                 ? "bg-gray-800 border-gray-700"
-                : "bg-white border-gray-200"
+                : "bg-white shadow-lg border-gray-200"
             }`}
           >
-            <div className="flex items-center space-x-3 mb-6">
-              <FileText className="w-6 h-6 text-blue-600" />
-              <h2
-                className={`text-2xl font-semibold ${
+            <div className="flex items-center mb-6">
+              <BookOpen className="w-6 h-6 text-emerald-600 mr-3" />
+              <h3
+                className={`text-2xl font-bold ${
                   isDark ? "text-white" : "text-gray-900"
                 }`}
               >
                 Skills & Biography
-              </h2>
+              </h3>
             </div>
 
             <div className="space-y-6">
@@ -731,36 +691,40 @@ const DescribeYourselfPage = () => {
                 >
                   Skills
                 </label>
-                <div className="flex space-x-2 mb-3">
+                <div className="flex gap-2 mb-3">
                   <input
                     type="text"
-                    value={skillInput}
-                    onChange={(e) => setSkillInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && addSkill()}
-                    className={`flex-1 px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    value={tempSkill}
+                    onChange={(e) => setTempSkill(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && (e.preventDefault(), addSkill())
+                    }
+                    className={`flex-1 px-4 py-3 rounded-lg border transition-colors ${
                       isDark
-                        ? "border-gray-600 bg-gray-700 text-white"
-                        : "border-gray-300 bg-white text-gray-900"
-                    }`}
+                        ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                        : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500"
+                    } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                     placeholder="e.g., JavaScript, Project Management, Design"
                   />
                   <button
+                    type="button"
                     onClick={addSkill}
-                    className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
                   >
-                    Add
+                    <Plus className="w-5 h-5" />
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {profileData.skills.map((skill, index) => (
+                  {formData.skills.map((skill, index) => (
                     <span
                       key={index}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-emerald-100 text-emerald-800"
                     >
                       {skill}
                       <button
+                        type="button"
                         onClick={() => removeSkill(skill)}
-                        className="ml-2 text-green-600 hover:text-green-800"
+                        className="ml-2 text-emerald-600 hover:text-emerald-800"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -778,14 +742,15 @@ const DescribeYourselfPage = () => {
                   Professional Bio
                 </label>
                 <textarea
-                  value={profileData.bio}
-                  onChange={(e) => handleInputChange("bio", e.target.value)}
-                  className={`w-full px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  name="professionalBio"
+                  value={formData.professionalBio}
+                  onChange={handleInputChange}
+                  rows={5}
+                  className={`w-full px-4 py-3 rounded-lg border transition-colors resize-none ${
                     isDark
-                      ? "border-gray-600 bg-gray-700 text-white"
-                      : "border-gray-300 bg-white text-gray-900"
-                  }`}
-                  rows={4}
+                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                      : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                   placeholder="Tell us about yourself, your experience, and what makes you unique..."
                 />
               </div>
@@ -801,15 +766,14 @@ const DescribeYourselfPage = () => {
                   </label>
                   <input
                     type="url"
-                    value={profileData.linkedin}
-                    onChange={(e) =>
-                      handleInputChange("linkedin", e.target.value)
-                    }
-                    className={`w-full px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    name="linkedinProfile"
+                    value={formData.linkedinProfile}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 rounded-lg border transition-colors ${
                       isDark
-                        ? "border-gray-600 bg-gray-700 text-white"
-                        : "border-gray-300 bg-white text-gray-900"
-                    }`}
+                        ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                        : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500"
+                    } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                     placeholder="https://linkedin.com/in/yourprofile"
                   />
                 </div>
@@ -824,15 +788,14 @@ const DescribeYourselfPage = () => {
                   </label>
                   <input
                     type="url"
-                    value={profileData.portfolio}
-                    onChange={(e) =>
-                      handleInputChange("portfolio", e.target.value)
-                    }
-                    className={`w-full px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    name="portfolioWebsite"
+                    value={formData.portfolioWebsite}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 rounded-lg border transition-colors ${
                       isDark
-                        ? "border-gray-600 bg-gray-700 text-white"
-                        : "border-gray-300 bg-white text-gray-900"
-                    }`}
+                        ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                        : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500"
+                    } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                     placeholder="https://yourportfolio.com"
                   />
                 </div>
@@ -843,28 +806,24 @@ const DescribeYourselfPage = () => {
           {/* Submit Button */}
           <div className="text-center">
             <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="inline-flex items-center px-12 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+              type="submit"
+              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold rounded-lg hover:from-emerald-700 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl text-lg"
             >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                  Creating Profile...
-                </>
-              ) : (
-                <>
-                  <Save className="w-5 h-5 mr-3" />
-                  Create My Profile
-                  <ChevronRight className="w-5 h-5 ml-3" />
-                </>
-              )}
+              🚀 Create My Profile
             </button>
+            <p
+              className={`text-sm mt-4 ${
+                isDark ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
+              Your information is secure and will only be used to match you with
+              relevant opportunities
+            </p>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
 };
 
-export default DescribeYourselfPage;
+export default ProfileComponent;
