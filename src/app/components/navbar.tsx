@@ -14,18 +14,17 @@ import {
   Home,
 } from "lucide-react";
 
-const Navbar = () => {
-  const [isDark, setIsDark] = useState(false);
+type NavbarProps = {
+  isDark: boolean;
+  toggleTheme: () => void;
+};
+
+const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCoursesDropdownOpen, setIsCoursesDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      setIsDark(savedTheme === "dark");
-    }
-
     // Handle scroll effect
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -34,12 +33,6 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const toggleTheme = () => {
-    const newTheme = !isDark;
-    setIsDark(newTheme);
-    localStorage.setItem("theme", newTheme ? "dark" : "light");
-  };
 
   const navigationLinks = [
     {
