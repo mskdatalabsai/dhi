@@ -159,6 +159,32 @@ const HomePage = () => {
 
               {/* Right Content - Visual Element */}
               <div className="relative">
+                {/* Preview Label */}
+                <div className="absolute -top-3 left-6 z-10">
+                  <div className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 py-1.5 rounded-full text-sm font-medium shadow-lg">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                    <span>Live Assessment Preview</span>
+                  </div>
+                </div>
+
                 <div
                   className={`rounded-2xl p-8 shadow-2xl border ${
                     isDark
@@ -270,6 +296,17 @@ const HomePage = () => {
                       AI Prediction: 92% match for ML Engineer roles
                     </p>
                   </div>
+                </div>
+
+                {/* Bottom Caption */}
+                <div className="text-center mt-4">
+                  <p
+                    className={`text-sm ${
+                      isDark ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    ↑ Experience our intuitive assessment interface
+                  </p>
                 </div>
 
                 {/* Floating Elements */}
