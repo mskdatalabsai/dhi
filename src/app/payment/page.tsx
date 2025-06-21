@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Check, CreditCard, Shield, Clock } from "lucide-react";
-import Navbar from "../components/navbar"; // Import the Navbar component
+import Navbar from "../components/Navbar"; // Import the Navbar component
 
 const PaymentPage = () => {
   const [isDark, setIsDark] = useState(false);
