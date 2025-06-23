@@ -5,11 +5,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Check,
-  Sun,
-  Moon,
   Save,
   AlertCircle,
+  Clock,
 } from "lucide-react";
+import Navbar from "../components/Navbar"; // Import the Navbar component
 
 const SurveyPage = () => {
   const [isDark, setIsDark] = useState(false);
@@ -140,8 +140,11 @@ const SurveyPage = () => {
     setQuestionStartTime(Date.now());
   }, []);
 
-  // Move submitSurvey above handleTimeUp and useEffect hooks
-  // (Removed duplicate submitSurvey declaration)
+  const toggleTheme = () => {
+    const newTheme = !isDark;
+    setIsDark(newTheme);
+    localStorage.setItem("theme", newTheme ? "dark" : "light");
+  };
 
   const submitSurvey = React.useCallback(async () => {
     // Track time spent on current question
@@ -254,22 +257,17 @@ const SurveyPage = () => {
 
   const getTimerColor = () => {
     const percentLeft = (totalTimeLeft / 3600) * 100;
-    if (percentLeft <= 10) return "text-red-600 bg-red-100";
-    if (percentLeft <= 25) return "text-orange-600 bg-orange-100";
-    return "text-emerald-600 bg-emerald-100";
+    if (percentLeft <= 10) return isDark ? "text-red-400" : "text-red-600";
+    if (percentLeft <= 25)
+      return isDark ? "text-orange-400" : "text-orange-600";
+    return isDark ? "text-emerald-400" : "text-emerald-600";
   };
 
   const getProgressBarColor = () => {
     const percentLeft = (totalTimeLeft / 3600) * 100;
     if (percentLeft <= 10) return "bg-red-500";
     if (percentLeft <= 25) return "bg-orange-500";
-    return "bg-emerald-600";
-  };
-
-  const toggleTheme = () => {
-    const newTheme = !isDark;
-    setIsDark(newTheme);
-    localStorage.setItem("theme", newTheme ? "dark" : "light");
+    return "bg-gradient-to-r from-emerald-600 to-green-600";
   };
 
   const handleAnswerChange = (
@@ -345,53 +343,52 @@ const SurveyPage = () => {
   if (isLoading) {
     return (
       <div
-        className={`min-h-screen flex items-center justify-center ${
+        className={`h-screen flex items-center justify-center ${
           isDark ? "bg-gray-900" : "bg-gray-50"
         }`}
       >
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-emerald-600"></div>
       </div>
     );
   }
 
   if (showSuccess) {
     return (
-      <div
-        className={`min-h-screen flex items-center justify-center ${
-          isDark ? "bg-gray-900" : "bg-gray-50"
-        }`}
-      >
-        <div
-          className={`max-w-md w-full mx-4 p-8 rounded-2xl ${
-            isDark ? "bg-gray-800 text-white" : "bg-white text-gray-900"
-          } shadow-xl text-center`}
-        >
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-green-600" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">Survey Completed!</h2>
-          <p className={`mb-6 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-            Thank you for completing our data science assessment survey. Your
-            responses help us create a personalized learning path for your data
-            science journey.
-          </p>
-          <div className="space-y-4">
-            <button
-              onClick={() => (window.location.href = "/courses")}
-              className="w-full bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white px-6 py-3 rounded-lg transition-colors font-medium"
-            >
-              View Recommended Courses
-            </button>
-            <button
-              onClick={() => (window.location.href = "/")}
-              className={`w-full border-2 px-6 py-3 rounded-lg transition-colors font-medium ${
-                isDark
-                  ? "border-gray-600 text-gray-300 hover:bg-gray-700"
-                  : "border-gray-300 text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              Return to Home
-            </button>
+      <div className={`h-screen ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+        <Navbar isDark={isDark} toggleTheme={toggleTheme} />
+        <div className="h-full flex items-center justify-center px-4">
+          <div
+            className={`max-w-md w-full p-8 rounded-2xl ${
+              isDark ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+            } shadow-xl text-center`}
+          >
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check className="w-8 h-8 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Survey Completed!</h2>
+            <p className={`mb-6 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+              Thank you for completing our data science assessment survey. Your
+              responses help us create a personalized learning path for your
+              data science journey.
+            </p>
+            <div className="space-y-4">
+              <button
+                onClick={() => (window.location.href = "/courses")}
+                className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+              >
+                View Recommended Courses
+              </button>
+              <button
+                onClick={() => (window.location.href = "/")}
+                className={`w-full border-2 px-6 py-3 rounded-lg transition-colors font-medium ${
+                  isDark
+                    ? "border-gray-600 text-gray-300 hover:bg-gray-700"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                Return to Home
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -408,12 +405,21 @@ const SurveyPage = () => {
     switch (currentQ.type) {
       case "multiple_choice":
         return (
-          <div className="space-y-3">
+          <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-2">
             {currentQ.options &&
               currentQ.options.map((option, index) => (
                 <label
                   key={index}
-                  className="flex items-center space-x-3 cursor-pointer"
+                  className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${
+                    Array.isArray(answers[currentQ.id]) &&
+                    (answers[currentQ.id] as string[]).includes(option)
+                      ? isDark
+                        ? "bg-emerald-900/20 border-emerald-600"
+                        : "bg-emerald-50 border-emerald-600"
+                      : isDark
+                      ? "bg-gray-700/50 border-gray-600 hover:bg-gray-700"
+                      : "bg-gray-50 border-gray-300 hover:bg-gray-100"
+                  }`}
                 >
                   <input
                     type="checkbox"
@@ -433,7 +439,11 @@ const SurveyPage = () => {
                     }}
                     className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
                   />
-                  <span className={isDark ? "text-gray-300" : "text-gray-700"}>
+                  <span
+                    className={`ml-3 text-sm ${
+                      isDark ? "text-gray-200" : "text-gray-700"
+                    }`}
+                  >
                     {option}
                   </span>
                 </label>
@@ -443,12 +453,20 @@ const SurveyPage = () => {
 
       case "single_choice":
         return (
-          <div className="space-y-3">
+          <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-2">
             {currentQ.options &&
               currentQ.options.map((option, index) => (
                 <label
                   key={index}
-                  className="flex items-center space-x-3 cursor-pointer"
+                  className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${
+                    answers[currentQ.id] === option
+                      ? isDark
+                        ? "bg-emerald-900/20 border-emerald-600"
+                        : "bg-emerald-50 border-emerald-600"
+                      : isDark
+                      ? "bg-gray-700/50 border-gray-600 hover:bg-gray-700"
+                      : "bg-gray-50 border-gray-300 hover:bg-gray-100"
+                  }`}
                 >
                   <input
                     type="radio"
@@ -457,7 +475,11 @@ const SurveyPage = () => {
                     onChange={() => handleAnswerChange(currentQ.id, option)}
                     className="w-4 h-4 text-emerald-600 focus:ring-emerald-500"
                   />
-                  <span className={isDark ? "text-gray-300" : "text-gray-700"}>
+                  <span
+                    className={`ml-3 text-sm ${
+                      isDark ? "text-gray-200" : "text-gray-700"
+                    }`}
+                  >
                     {option}
                   </span>
                 </label>
@@ -475,18 +497,18 @@ const SurveyPage = () => {
             }
             onChange={(e) => handleAnswerChange(currentQ.id, e.target.value)}
             placeholder={currentQ.placeholder}
-            className={`w-full p-4 rounded-lg border-2 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+            className={`w-full p-3 rounded-lg border-2 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all text-sm ${
               hasError
                 ? "border-red-500"
                 : isDark
-                ? "border-gray-600"
-                : "border-gray-300"
+                ? "border-gray-600 focus:border-emerald-500"
+                : "border-gray-300 focus:border-emerald-500"
             } ${
               isDark
                 ? "bg-gray-700 text-white placeholder-gray-400"
                 : "bg-white text-gray-900 placeholder-gray-500"
             }`}
-            rows={4}
+            rows={3}
           />
         );
 
@@ -497,9 +519,9 @@ const SurveyPage = () => {
               <button
                 key={index}
                 onClick={() => handleAnswerChange(currentQ.id, index + 1)}
-                className={`w-12 h-12 rounded-full border-2 font-semibold transition-all ${
+                className={`w-10 h-10 rounded-full border-2 font-semibold transition-all text-sm ${
                   answers[currentQ.id] === index + 1
-                    ? "bg-gradient-to-r from-emerald-600 to-green-700 text-white border-emerald-600"
+                    ? "bg-gradient-to-r from-emerald-600 to-green-600 text-white border-emerald-600"
                     : isDark
                     ? "border-gray-600 text-gray-300 hover:border-emerald-500"
                     : "border-gray-300 text-gray-700 hover:border-emerald-500"
@@ -518,165 +540,65 @@ const SurveyPage = () => {
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-300 ${
+      className={`h-screen overflow-hidden flex flex-col ${
         isDark ? "bg-gray-900" : "bg-gray-50"
       }`}
     >
-      {/* Theme Toggle */}
-      <div className="fixed top-6 right-6 z-50">
-        <button
-          onClick={toggleTheme}
-          className={`p-3 rounded-full transition-all duration-300 ${
-            isDark
-              ? "bg-gray-800 hover:bg-gray-700 text-yellow-400"
-              : "bg-white hover:bg-gray-50 text-gray-600 shadow-lg"
-          }`}
-        >
-          {isDark ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
-        </button>
-      </div>
+      {/* Navbar */}
+      <Navbar isDark={isDark} toggleTheme={toggleTheme} />
 
-      <div className="container mx-auto px-6 py-12 max-w-4xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="mb-6">
-            <div
-              className={`inline-flex items-center justify-center w-16 h-16 rounded-xl mb-4 mx-auto relative overflow-hidden`}
-            >
-              {/* Custom SVG Logo */}
-              <svg
-                width="64"
-                height="64"
-                viewBox="0 0 80 80"
-                className="absolute inset-0"
-              >
-                <defs>
-                  <linearGradient
-                    id="greenToYellow2"
-                    x1="0%"
-                    y1="0%"
-                    x2="100%"
-                    y2="100%"
-                  >
-                    <stop offset="0%" stopColor="#059669" />
-                    <stop offset="50%" stopColor="#10b981" />
-                    <stop offset="100%" stopColor="#fbbf24" />
-                  </linearGradient>
-                </defs>
-
-                <rect
-                  x="10"
-                  y="10"
-                  width="25"
-                  height="25"
-                  fill="#047857"
-                  rx="3"
-                  opacity="0.8"
-                />
-                <rect
-                  x="20"
-                  y="20"
-                  width="20"
-                  height="20"
-                  fill="#059669"
-                  rx="5"
-                  opacity="0.9"
-                />
-                <rect
-                  x="30"
-                  y="30"
-                  width="15"
-                  height="15"
-                  fill="#10b981"
-                  rx="7"
-                  opacity="0.9"
-                />
-                <circle cx="50" cy="25" r="8" fill="#fbbf24" opacity="0.9" />
-                <circle cx="55" cy="35" r="6" fill="#f59e0b" opacity="0.8" />
-                <circle cx="45" cy="45" r="4" fill="#eab308" opacity="0.7" />
-                <path
-                  d="M35 37 L47 29"
-                  stroke="url(#greenToYellow2)"
-                  strokeWidth="2"
-                  opacity="0.6"
-                />
-                <path
-                  d="M40 45 L50 30"
-                  stroke="url(#greenToYellow2)"
-                  strokeWidth="1.5"
-                  opacity="0.5"
-                />
-              </svg>
-            </div>
-            <h2
-              className={`text-lg font-semibold ${
+      <div className="flex-1 flex flex-col px-6 py-4 max-w-5xl mx-auto w-full pt-20">
+        {/* Header Section - Compact */}
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h1
+              className={`text-2xl font-bold ${
                 isDark ? "text-white" : "text-gray-900"
               }`}
             >
-              MSK DATALABS.AI
-            </h2>
-            <p className="text-xs text-gray-500 italic">
-              acquire indefinitely...
-            </p>
-          </div>
-          <h1
-            className={`text-4xl font-bold mb-2 ${
-              isDark ? "text-white" : "text-gray-900"
-            }`}
-          >
-            Data Science Assessment Survey
-          </h1>
-          <p
-            className={`text-lg ${isDark ? "text-gray-300" : "text-gray-600"}`}
-          >
-            Help us understand your data science learning goals and background
-          </p>
-
-          {/* Timer Display */}
-          <div className="mt-6">
-            <div
-              className={`inline-flex items-center space-x-3 px-6 py-3 rounded-full ${getTimerColor()} border-2 ${
-                totalTimeLeft <= 600
-                  ? "border-red-300 animate-pulse"
-                  : totalTimeLeft <= 1800
-                  ? "border-orange-300"
-                  : "border-emerald-300"
+              Data Science Assessment Survey
+            </h1>
+            <p
+              className={`text-sm ${
+                isDark ? "text-gray-400" : "text-gray-600"
               }`}
             >
-              <div
-                className={`w-3 h-3 rounded-full ${
-                  totalTimeLeft <= 600
-                    ? "bg-red-500 animate-pulse"
-                    : totalTimeLeft <= 1800
-                    ? "bg-orange-500"
-                    : "bg-emerald-600"
-                }`}
-              ></div>
-              <span className="font-bold text-lg">
-                Time Remaining: {formatTime(totalTimeLeft)}
-              </span>
-            </div>
-            {totalTimeLeft <= 600 && (
-              <p className="text-red-600 text-sm mt-2 font-medium">
-                ⚠️ Less than 10 minutes remaining! Please complete quickly.
-              </p>
-            )}
+              Help us understand your learning goals and background
+            </p>
+          </div>
+
+          {/* Timer */}
+          <div
+            className={`flex items-center space-x-2 px-4 py-2 rounded-full ${
+              isDark
+                ? totalTimeLeft <= 600
+                  ? "bg-red-900/30"
+                  : "bg-gray-800"
+                : totalTimeLeft <= 600
+                ? "bg-red-100"
+                : "bg-gray-100"
+            }`}
+          >
+            <Clock className={`w-4 h-4 ${getTimerColor()}`} />
+            <span className={`font-semibold text-sm ${getTimerColor()}`}>
+              {formatTime(totalTimeLeft)}
+            </span>
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
+        {/* Progress Section - Compact */}
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-1">
             <span
-              className={`text-sm font-medium ${
-                isDark ? "text-gray-300" : "text-gray-700"
+              className={`text-xs font-medium ${
+                isDark ? "text-gray-400" : "text-gray-600"
               }`}
             >
               Question {currentQuestion + 1} of {questions.length}
             </span>
             <span
-              className={`text-sm font-medium ${
-                isDark ? "text-gray-300" : "text-gray-700"
+              className={`text-xs font-medium ${
+                isDark ? "text-gray-400" : "text-gray-600"
               }`}
             >
               {Math.round(progress)}% Complete
@@ -685,68 +607,74 @@ const SurveyPage = () => {
 
           {/* Survey Progress Bar */}
           <div
-            className={`w-full h-3 rounded-full ${
+            className={`w-full h-2 rounded-full ${
               isDark ? "bg-gray-700" : "bg-gray-200"
-            } mb-2`}
+            } mb-1`}
           >
             <div
-              className="h-3 bg-gradient-to-r from-emerald-600 to-green-700 rounded-full transition-all duration-300"
+              className="h-2 bg-gradient-to-r from-emerald-600 to-green-600 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
 
-          {/* Time Progress Bar */}
+          {/* Timer Progress Bar */}
           <div
-            className={`w-full h-2 rounded-full ${
+            className={`w-full h-1.5 rounded-full ${
               isDark ? "bg-gray-700" : "bg-gray-200"
             }`}
           >
             <div
-              className={`h-2 rounded-full transition-all duration-1000 ${getProgressBarColor()}`}
+              className={`h-1.5 rounded-full transition-all duration-1000 ${getProgressBarColor()}`}
               style={{ width: `${(totalTimeLeft / 3600) * 100}%` }}
             />
           </div>
 
-          <div className="flex justify-between items-center mt-1 text-xs text-gray-500">
-            <span>Survey Progress</span>
-            <span>Time Progress</span>
+          <div className="flex justify-between items-center mt-1 text-xs">
+            <span className={`${isDark ? "text-gray-500" : "text-gray-500"}`}>
+              Survey Progress
+            </span>
+            <span className={`${isDark ? "text-gray-500" : "text-gray-500"}`}>
+              Time Progress
+            </span>
           </div>
         </div>
 
-        {/* Question Card */}
+        {/* Question Card - Takes remaining space */}
         <div
-          className={`rounded-2xl p-8 shadow-xl border transition-colors duration-300 ${
+          className={`flex-1 rounded-xl p-6 shadow-xl border transition-colors duration-300 flex flex-col ${
             isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
           }`}
         >
-          <div className="mb-6">
+          <div className="mb-4">
             <h2
-              className={`text-2xl font-semibold mb-4 ${
+              className={`text-xl font-semibold ${
                 isDark ? "text-white" : "text-gray-900"
               }`}
             >
               {currentQ?.question}
             </h2>
-            {currentQ?.required && (
-              <span className="text-red-500 text-sm">* Required</span>
-            )}
-            {validationErrors[currentQ?.id] && (
-              <div className="flex items-center space-x-2 mt-2 text-red-500">
-                <AlertCircle className="w-4 h-4" />
-                <span className="text-sm">This question is required</span>
-              </div>
-            )}
+            <div className="flex items-center space-x-2 mt-1">
+              {currentQ?.required && (
+                <span className="text-red-500 text-xs">* Required</span>
+              )}
+              {validationErrors[currentQ?.id] && (
+                <div className="flex items-center space-x-1 text-red-500">
+                  <AlertCircle className="w-3 h-3" />
+                  <span className="text-xs">This question is required</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {renderQuestion()}
+          <div className="flex-1 overflow-hidden">{renderQuestion()}</div>
         </div>
 
-        {/* Navigation */}
-        <div className="flex justify-between items-center mt-8">
+        {/* Navigation - Fixed at bottom */}
+        <div className="flex justify-between items-center mt-4">
           <button
             onClick={prevQuestion}
             disabled={currentQuestion === 0}
-            className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all ${
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all text-sm ${
               currentQuestion === 0
                 ? "opacity-50 cursor-not-allowed"
                 : isDark
@@ -754,11 +682,11 @@ const SurveyPage = () => {
                 : "bg-gray-200 hover:bg-gray-300 text-gray-700"
             }`}
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4" />
             Previous
           </button>
 
-          <div className="flex space-x-4">
+          <div className="flex space-x-3">
             <button
               onClick={() => {
                 const timeSpentOnQuestion = Math.floor(
@@ -773,41 +701,41 @@ const SurveyPage = () => {
                   totalTimeUsed: 3600 - totalTimeLeft,
                 });
               }}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-all text-sm ${
                 isDark
                   ? "bg-gray-700 hover:bg-gray-600 text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-700"
               }`}
             >
-              <Save className="w-4 h-4" />
-              Save Progress
+              <Save className="w-3 h-3" />
+              Save
             </button>
 
             {currentQuestion === questions.length - 1 ? (
               <button
                 onClick={submitSurvey}
                 disabled={isSubmitting}
-                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white rounded-lg font-medium transition-all disabled:opacity-50"
+                className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 text-sm"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
                     Submitting...
                   </>
                 ) : (
                   <>
                     Submit Survey
-                    <Check className="w-5 h-5" />
+                    <Check className="w-4 h-4" />
                   </>
                 )}
               </button>
             ) : (
               <button
                 onClick={nextQuestion}
-                className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white rounded-lg font-medium transition-all"
+                className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-lg font-medium transition-all text-sm"
               >
                 Next
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             )}
           </div>

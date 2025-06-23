@@ -1,24 +1,39 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { Check, CreditCard, Shield, Clock } from "lucide-react";
 import Navbar from "../components/Navbar"; // Import the Navbar component
 
+// Declare Razorpay for TypeScript
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 const PaymentPage = () => {
   const [isDark, setIsDark] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentData, setPaymentData] = useState({
-    cardNumber: "",
-    expiryDate: "",
-    cvv: "",
-    cardholderName: "",
-  });
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) {
       setIsDark(savedTheme === "dark");
     }
+
+    // Load Razorpay script
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => setRazorpayLoaded(true);
+    script.onerror = () => console.error("Failed to load Razorpay script");
+    document.body.appendChild(script);
+
+    return () => {
+      // Cleanup script on unmount
+      document.body.removeChild(script);
+    };
   }, []);
 
   const toggleTheme = () => {
@@ -27,60 +42,109 @@ const PaymentPage = () => {
     localStorage.setItem("theme", newTheme ? "dark" : "light");
   };
 
-  const handlePaymentInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-
-    if (name === "cardNumber") {
-      const formatted = value
-        .replace(/\s/g, "")
-        .replace(/(\d{4})/g, "$1 ")
-        .trim();
-      setPaymentData((prev) => ({ ...prev, [name]: formatted }));
-    } else if (name === "expiryDate") {
-      const formatted = value
-        .replace(/\D/g, "")
-        .replace(/(\d{2})(\d)/, "$1/$2")
-        .substr(0, 5);
-      setPaymentData((prev) => ({ ...prev, [name]: formatted }));
-    } else if (name === "cvv") {
-      const formatted = value.replace(/\D/g, "").substr(0, 3);
-      setPaymentData((prev) => ({ ...prev, [name]: formatted }));
-    } else {
-      setPaymentData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handlePaymentSubmit = async () => {
-    if (
-      !paymentData.cardholderName ||
-      !paymentData.cardNumber ||
-      !paymentData.expiryDate ||
-      !paymentData.cvv
-    ) {
-      alert("Please fill in all payment details");
+  const handleRazorpayPayment = async () => {
+    if (!razorpayLoaded) {
+      alert("Payment system is loading. Please try again in a moment.");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
+      // Create order data
+      const orderData = {
+        amount: 9900, // Amount in paisa (₹99)
+        currency: "INR",
+        receipt: "receipt_" + Date.now(),
+      };
+
+      // In a real app, you would call your backend to create an order
+      // For demo purposes, we'll use test data
+      const options = {
+        key: "rzp_test_9999999999", // Test API Key - replace with your test key
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "AI Career Assessment",
+        description: "Career Assessment Fee",
+        image: "/logo.png", // Add your logo URL
+        order_id: "order_" + Date.now(), // In real app, get this from backend
+        handler: function (response: any) {
+          // Payment success callback
+          console.log("Payment Success:", response);
+          handlePaymentSuccess(response);
+        },
+        prefill: {
+          name: "John Doe",
+          email: "john.doe@example.com",
+          contact: "9999999999",
+        },
+        notes: {
+          address: "Corporate Office",
+        },
+        theme: {
+          color: "#059669", // Emerald-600 to match your design
+        },
+        modal: {
+          ondismiss: function () {
+            setIsSubmitting(false);
+            console.log("Payment modal closed");
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+
+      razorpay.on("payment.failed", function (response: any) {
+        // Payment failure callback
+        console.log("Payment Failed:", response);
+        handlePaymentFailure(response);
+      });
+
+      razorpay.open();
+    } catch (error) {
+      console.error("Error initiating payment:", error);
+      alert("Error initiating payment. Please try again.");
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePaymentSuccess = async (response: any) => {
+    try {
+      // Process successful payment
       const finalData = {
         userId: "user_" + Date.now(),
         timestamp: new Date().toISOString(),
         assessmentFee: 99,
-        paymentData: paymentData,
+        paymentData: {
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_signature: response.razorpay_signature,
+        },
         completedAt: new Date().toISOString(),
       };
 
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      console.log("Payment submitted:", finalData);
+      // In a real app, verify payment on your backend
+      console.log("Payment completed:", finalData);
+
+      // Simulate backend verification
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      alert("Payment successful! Redirecting to assessment...");
       window.location.href = "/survey";
     } catch (error) {
-      console.error("Error processing payment:", error);
-      alert("Error processing payment. Please try again.");
+      console.error("Error processing successful payment:", error);
+      alert(
+        "Payment was successful but there was an error. Please contact support."
+      );
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePaymentFailure = (response: any) => {
+    console.error("Payment failed:", response);
+    alert("Payment failed. Please try again.");
+    setIsSubmitting(false);
   };
 
   return (
@@ -185,7 +249,7 @@ const PaymentPage = () => {
           </div>
         </div>
 
-        {/* Payment Form */}
+        {/* Payment Section */}
         <div
           className={`rounded-2xl p-8 border ${
             isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
@@ -198,137 +262,118 @@ const PaymentPage = () => {
                 isDark ? "text-white" : "text-gray-900"
               }`}
             >
-              Payment Details
+              Secure Payment
             </h3>
           </div>
 
-          <div className="space-y-6">
-            <div>
-              <label
-                className={`block text-sm font-medium mb-2 ${
-                  isDark ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                Cardholder Name
-              </label>
-              <input
-                type="text"
-                name="cardholderName"
-                value={paymentData.cardholderName}
-                onChange={handlePaymentInputChange}
-                className={`w-full px-4 py-3 rounded-lg border ${
-                  isDark
-                    ? "bg-gray-700 border-gray-600 text-white"
-                    : "bg-gray-50 border-gray-300 text-gray-900"
-                } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
-                placeholder="John Doe"
-              />
-            </div>
-
-            <div>
-              <label
-                className={`block text-sm font-medium mb-2 ${
-                  isDark ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                Card Number
-              </label>
-              <input
-                type="text"
-                name="cardNumber"
-                value={paymentData.cardNumber}
-                onChange={handlePaymentInputChange}
-                className={`w-full px-4 py-3 rounded-lg border ${
-                  isDark
-                    ? "bg-gray-700 border-gray-600 text-white"
-                    : "bg-gray-50 border-gray-300 text-gray-900"
-                } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
-                placeholder="1234 5678 9012 3456"
-                maxLength={19}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-2 ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Expiry Date
-                </label>
-                <input
-                  type="text"
-                  name="expiryDate"
-                  value={paymentData.expiryDate}
-                  onChange={handlePaymentInputChange}
-                  className={`w-full px-4 py-3 rounded-lg border ${
-                    isDark
-                      ? "bg-gray-700 border-gray-600 text-white"
-                      : "bg-gray-50 border-gray-300 text-gray-900"
-                  } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
-                  placeholder="MM/YY"
-                  maxLength={5}
-                />
-              </div>
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-2 ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  CVV
-                </label>
-                <input
-                  type="text"
-                  name="cvv"
-                  value={paymentData.cvv}
-                  onChange={handlePaymentInputChange}
-                  className={`w-full px-4 py-3 rounded-lg border ${
-                    isDark
-                      ? "bg-gray-700 border-gray-600 text-white"
-                      : "bg-gray-50 border-gray-300 text-gray-900"
-                  } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
-                  placeholder="123"
-                  maxLength={3}
-                />
-              </div>
-            </div>
-
-            {/* Security Notice */}
+          {/* Payment Amount Display */}
+          <div
+            className={`text-center py-8 px-6 rounded-lg mb-6 ${
+              isDark ? "bg-gray-700" : "bg-gray-100"
+            }`}
+          >
             <div
-              className={`flex items-center space-x-2 p-4 rounded-lg ${
-                isDark ? "bg-gray-700" : "bg-gray-100"
+              className={`text-4xl font-bold mb-2 ${
+                isDark ? "text-white" : "text-gray-900"
               }`}
             >
-              <Shield className="w-5 h-5 text-emerald-600" />
-              <p
-                className={`text-sm ${
-                  isDark ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Your payment information is securely processed.
-              </p>
+              ₹99
             </div>
-            <button
-              type="button"
-              onClick={handlePaymentSubmit}
-              disabled={isSubmitting}
-              className={`w-full mt-6 py-3 rounded-lg font-semibold text-lg transition-colors ${
-                isSubmitting
-                  ? "bg-emerald-300 text-white cursor-not-allowed"
-                  : "bg-emerald-600 hover:bg-emerald-700 text-white"
+            <p
+              className={`text-lg ${
+                isDark ? "text-gray-300" : "text-gray-600"
               }`}
             >
-              {isSubmitting ? (
+              One-time assessment fee
+            </p>
+          </div>
+
+          {/* Test Payment Info */}
+          <div
+            className={`p-4 rounded-lg mb-6 border-l-4 border-emerald-500 ${
+              isDark ? "bg-emerald-900/20" : "bg-emerald-50"
+            }`}
+          >
+            <h4
+              className={`font-semibold mb-2 ${
+                isDark ? "text-emerald-300" : "text-emerald-800"
+              }`}
+            >
+              Test Mode Information
+            </h4>
+            <p
+              className={`text-sm mb-2 ${
+                isDark ? "text-emerald-200" : "text-emerald-700"
+              }`}
+            >
+              This is a test payment. Use these test card details:
+            </p>
+            <ul
+              className={`text-sm space-y-1 ${
+                isDark ? "text-emerald-200" : "text-emerald-700"
+              }`}
+            >
+              <li>• Card Number: 4111 1111 1111 1111</li>
+              <li>• Expiry: Any future date</li>
+              <li>• CVV: Any 3 digits</li>
+              <li>• Name: Any name</li>
+            </ul>
+          </div>
+
+          {/* Security Notice */}
+          <div
+            className={`flex items-center space-x-2 p-4 rounded-lg mb-6 ${
+              isDark ? "bg-gray-700" : "bg-gray-100"
+            }`}
+          >
+            <Shield className="w-5 h-5 text-emerald-600" />
+            <p
+              className={`text-sm ${
+                isDark ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              Your payment is secured by Razorpay with 256-bit SSL encryption.
+            </p>
+          </div>
+
+          {/* Payment Button */}
+          <button
+            type="button"
+            onClick={handleRazorpayPayment}
+            disabled={isSubmitting || !razorpayLoaded}
+            className={`w-full py-4 rounded-lg font-semibold text-lg transition-all duration-300 ${
+              isSubmitting || !razorpayLoaded
+                ? "bg-emerald-300 text-white cursor-not-allowed"
+                : "bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-lg transform hover:scale-[1.02]"
+            }`}
+          >
+            {isSubmitting ? (
+              <span className="flex items-center justify-center">
+                <Clock className="w-5 h-5 mr-2 animate-spin" />
+                Processing Payment...
+              </span>
+            ) : !razorpayLoaded ? (
+              "Loading Payment System..."
+            ) : (
+              <>
                 <span className="flex items-center justify-center">
-                  <Clock className="w-5 h-5 mr-2 animate-spin" />
-                  Processing...
+                  <CreditCard className="w-5 h-5 mr-2" />
+                  Pay ₹99 with Razorpay
                 </span>
-              ) : (
-                "Pay ₹99"
-              )}
-            </button>
+              </>
+            )}
+          </button>
+
+          {/* Powered by Razorpay */}
+          <div className="text-center mt-4">
+            <p
+              className={`text-xs ${
+                isDark ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
+              Powered by{" "}
+              <span className="font-semibold text-[#3395ff]">Razorpay</span>
+            </p>
           </div>
         </div>
       </div>
