@@ -260,14 +260,14 @@ const SurveyPage = () => {
     if (percentLeft <= 10) return isDark ? "text-red-400" : "text-red-600";
     if (percentLeft <= 25)
       return isDark ? "text-orange-400" : "text-orange-600";
-    return isDark ? "text-emerald-400" : "text-emerald-600";
+    return isDark ? "text-purple-400" : "text-purple-600";
   };
 
   const getProgressBarColor = () => {
     const percentLeft = (totalTimeLeft / 3600) * 100;
     if (percentLeft <= 10) return "bg-red-500";
     if (percentLeft <= 25) return "bg-orange-500";
-    return "bg-gradient-to-r from-emerald-600 to-green-600";
+    return "bg-purple-500";
   };
 
   const handleAnswerChange = (
@@ -343,11 +343,14 @@ const SurveyPage = () => {
   if (isLoading) {
     return (
       <div
-        className={`h-screen flex items-center justify-center ${
+        className={`h-screen overflow-hidden ${
           isDark ? "bg-gray-900" : "bg-gray-50"
         }`}
       >
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-emerald-600"></div>
+        <Navbar isDark={isDark} toggleTheme={toggleTheme} />
+        <div className="h-full flex items-center justify-center pt-20">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600"></div>
+        </div>
       </div>
     );
   }
@@ -356,7 +359,7 @@ const SurveyPage = () => {
     return (
       <div className={`h-screen ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
         <Navbar isDark={isDark} toggleTheme={toggleTheme} />
-        <div className="h-full flex items-center justify-center px-4">
+        <div className="h-full flex items-center justify-center px-4 pt-20">
           <div
             className={`max-w-md w-full p-8 rounded-2xl ${
               isDark ? "bg-gray-800 text-white" : "bg-white text-gray-900"
@@ -374,7 +377,7 @@ const SurveyPage = () => {
             <div className="space-y-4">
               <button
                 onClick={() => (window.location.href = "/courses")}
-                className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+                className="w-full bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
               >
                 View Recommended Courses
               </button>
@@ -414,8 +417,8 @@ const SurveyPage = () => {
                     Array.isArray(answers[currentQ.id]) &&
                     (answers[currentQ.id] as string[]).includes(option)
                       ? isDark
-                        ? "bg-emerald-900/20 border-emerald-600"
-                        : "bg-emerald-50 border-emerald-600"
+                        ? "bg-purple-900/20 border-purple-600"
+                        : "bg-purple-50 border-purple-600"
                       : isDark
                       ? "bg-gray-700/50 border-gray-600 hover:bg-gray-700"
                       : "bg-gray-50 border-gray-300 hover:bg-gray-100"
@@ -521,10 +524,10 @@ const SurveyPage = () => {
                 onClick={() => handleAnswerChange(currentQ.id, index + 1)}
                 className={`w-10 h-10 rounded-full border-2 font-semibold transition-all text-sm ${
                   answers[currentQ.id] === index + 1
-                    ? "bg-gradient-to-r from-emerald-600 to-green-600 text-white border-emerald-600"
+                    ? "bg-gradient-to-r from-purple-600 to-teal-600 text-white border-purple-600"
                     : isDark
-                    ? "border-gray-600 text-gray-300 hover:border-emerald-500"
-                    : "border-gray-300 text-gray-700 hover:border-emerald-500"
+                    ? "border-gray-600 text-gray-300 hover:border-purple-500"
+                    : "border-gray-300 text-gray-700 hover:border-purple-500"
                 }`}
               >
                 {index + 1}
@@ -572,10 +575,10 @@ const SurveyPage = () => {
             className={`flex items-center space-x-2 px-4 py-2 rounded-full ${
               isDark
                 ? totalTimeLeft <= 600
-                  ? "bg-red-900/30"
+                  ? "bg-red-900/30 animate-pulse"
                   : "bg-gray-800"
                 : totalTimeLeft <= 600
-                ? "bg-red-100"
+                ? "bg-red-100 animate-pulse"
                 : "bg-gray-100"
             }`}
           >
@@ -612,7 +615,7 @@ const SurveyPage = () => {
             } mb-1`}
           >
             <div
-              className="h-2 bg-gradient-to-r from-emerald-600 to-green-600 rounded-full transition-all duration-300"
+              className="h-2 bg-gradient-to-r from-purple-600 to-teal-600 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -732,7 +735,7 @@ const SurveyPage = () => {
             ) : (
               <button
                 onClick={nextQuestion}
-                className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-lg font-medium transition-all text-sm"
+                className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white rounded-lg font-medium transition-all text-sm"
               >
                 Next
                 <ChevronRight className="w-4 h-4" />

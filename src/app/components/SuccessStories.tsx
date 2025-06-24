@@ -49,7 +49,7 @@ const SuccessStories: React.FC<SuccessStoriesProps> = ({ isDark }) => {
             placed as a Data Scientist at Google within 3 months!&quot;
           </p>
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center mr-4">
+            <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mr-4">
               <span className="text-white font-bold">AS</span>
             </div>
             <div>
@@ -97,7 +97,7 @@ const SuccessStories: React.FC<SuccessStoriesProps> = ({ isDark }) => {
             Engineering. Now earning 80% more than before.&quot;
           </p>
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center mr-4">
+            <div className="w-12 h-12 bg-teal-600 rounded-full flex items-center justify-center mr-4">
               <span className="text-white font-bold">PS</span>
             </div>
             <div>
@@ -145,7 +145,7 @@ const SuccessStories: React.FC<SuccessStoriesProps> = ({ isDark }) => {
             which skills to develop for my dream role.&quot;
           </p>
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center mr-4">
+            <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mr-4">
               <span className="text-white font-bold">RK</span>
             </div>
             <div>

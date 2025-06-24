@@ -36,8 +36,8 @@ const WhyChoose: React.FC<WhyChooseProps> = ({ isDark }) => {
               : "bg-white border-gray-200 shadow-lg"
           }`}
         >
-          <div className="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center mb-6">
-            <Target className="w-7 h-7 text-emerald-600" />
+          <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center mb-6">
+            <Target className="w-7 h-7 text-purple-600" />
           </div>
           <h3
             className={`text-xl font-bold mb-3 ${
@@ -59,8 +59,8 @@ const WhyChoose: React.FC<WhyChooseProps> = ({ isDark }) => {
               : "bg-white border-gray-200 shadow-lg"
           }`}
         >
-          <div className="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center mb-6">
-            <BookOpen className="w-7 h-7 text-emerald-600" />
+          <div className="w-14 h-14 bg-teal-100 rounded-xl flex items-center justify-center mb-6">
+            <BookOpen className="w-7 h-7 text-teal-600" />
           </div>
           <h3
             className={`text-xl font-bold mb-3 ${
@@ -82,8 +82,8 @@ const WhyChoose: React.FC<WhyChooseProps> = ({ isDark }) => {
               : "bg-white border-gray-200 shadow-lg"
           }`}
         >
-          <div className="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center mb-6">
-            <User className="w-7 h-7 text-emerald-600" />
+          <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center mb-6">
+            <User className="w-7 h-7 text-purple-600" />
           </div>
           <h3
             className={`text-xl font-bold mb-3 ${

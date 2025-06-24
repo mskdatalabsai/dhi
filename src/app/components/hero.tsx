@@ -1,51 +1,105 @@
 "use client";
 
-import React from "react";
-import { ArrowRight, Play } from "lucide-react";
+import React, { useState } from "react";
+import { ArrowRight, Play, Pause, Volume2 } from "lucide-react";
 
 interface landHeroProps {
   isDark: boolean;
+  videoPath?: string; // Optional video path prop
 }
 
-const LandHero = ({ isDark }: landHeroProps) => {
+const LandHero = ({ isDark, videoPath }: landHeroProps) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  const handleVideoClick = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+    }
+  };
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (videoRef.current) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pos = (e.clientX - rect.left) / rect.width;
+      videoRef.current.currentTime = pos * duration;
+    }
+  };
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
   return (
     <div className="mb-24">
       <div className="grid lg:grid-cols-2 gap-12 items-center">
         {/* Left Content */}
         <div>
           <div className="mb-6">
-            <span className="inline-block px-4 py-2 bg-emerald-100 text-emerald-700 text-sm font-medium rounded-full mb-4">
-              AI-Powered Career Assessment Platform
+            <span className="inline-block px-4 py-2 bg-purple-100 text-purple-700 text-sm font-medium rounded-full mb-4">
+              DHITI — The AI That Truly Understands You
             </span>
             <h1
               className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 ${
                 isDark ? "text-white" : "text-gray-900"
               }`}
             >
-              Find Your Perfect
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-green-600">
+              Discover the
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
                 {" "}
-                Data Science{" "}
+                IT role{" "}
               </span>
-              Career Path
+              you were born to do
             </h1>
             <p
               className={`text-xl leading-relaxed mb-8 ${
                 isDark ? "text-gray-300" : "text-gray-600"
               }`}
             >
-              Our AI-driven assessment analyzes your skills, experience, and
-              goals to match you with the ideal data science role. Join 5,000+
-              professionals who&apos;ve transformed their careers.
+              DHITI.AI uses an innovative survey to understand your unique
+              strengths and passions. Our Generative AI-powered algorithms then
+              analyze these inputs to recommend the ideal IT career paths where
+              you&apos;ll not only succeed but truly thrive, ensuring
+              you&apos;re leading the future of works.
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
             <button
               onClick={() => (window.location.href = "/payment")}
-              className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-emerald-600 to-green-600 text-white text-lg font-semibold rounded-xl hover:from-emerald-700 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-purple-600 to-teal-600 text-white text-lg font-semibold rounded-xl hover:from-purple-700 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              Start Free Assessment
+              Discover Your Path
               <ArrowRight className="ml-2 w-5 h-5" />
             </button>
             <button
@@ -79,7 +133,7 @@ const LandHero = ({ isDark }: landHeroProps) => {
                       isDark ? "bg-gray-700" : "bg-gray-200"
                     }`}
                   >
-                    <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-green-500" />
+                    <div className="w-full h-full bg-gradient-to-br from-purple-400 to-teal-500" />
                   </div>
                 ))}
               </div>
@@ -113,143 +167,193 @@ const LandHero = ({ isDark }: landHeroProps) => {
           </div>
         </div>
 
-        {/* Right Content - Visual Element */}
+        {/* Right Content - Video Section */}
         <div className="relative">
-          {/* Preview Label */}
-          <div className="absolute -top-3 left-6 z-10">
-            <div className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 py-1.5 rounded-full text-sm font-medium shadow-lg">
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                />
-              </svg>
-              <span>Live Assessment Preview</span>
-            </div>
-          </div>
-
+          {/* Video Container */}
           <div
-            className={`rounded-2xl p-8 shadow-2xl border ${
+            className={`relative rounded-2xl overflow-hidden shadow-2xl border ${
               isDark
                 ? "bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700"
                 : "bg-gradient-to-br from-white to-gray-50 border-gray-200"
             }`}
+            onMouseEnter={() => setShowControls(true)}
+            onMouseLeave={() => setShowControls(false)}
           >
-            {/* Mock Assessment Interface */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3
-                  className={`text-lg font-semibold ${
-                    isDark ? "text-white" : "text-gray-900"
+            {/* Video Preview/Thumbnail */}
+            <div className="aspect-video relative overflow-hidden">
+              {videoPath ? (
+                // Real video element
+                <video
+                  ref={videoRef}
+                  className="w-full h-full object-cover"
+                  onTimeUpdate={handleTimeUpdate}
+                  onLoadedMetadata={handleLoadedMetadata}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                  poster="/video-thumbnail.jpg" // Optional poster image
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                >
+                  <source src={videoPath} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                // Fallback placeholder when no video is provided
+                <>
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-teal-500 to-blue-600"></div>
+
+                  {/* Overlay pattern for visual interest */}
+                  <div className="absolute inset-0 opacity-20">
+                    <div className="absolute top-4 left-4 w-32 h-32 bg-white rounded-full opacity-10"></div>
+                    <div className="absolute bottom-8 right-8 w-24 h-24 bg-white rounded-full opacity-10"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-white rounded-full opacity-5"></div>
+                  </div>
+
+                  {/* Video Content Preview */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center text-white">
+                      <h3 className="text-2xl font-bold mb-2">
+                        See DHITI.AI in Action
+                      </h3>
+                      <p className="text-lg opacity-90">
+                        Watch how our AI transforms careers
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Play Button */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <button
+                  onClick={handleVideoClick}
+                  className={`w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center hover:bg-white/30 hover:scale-110 transition-all duration-300 ${
+                    isPlaying ? "opacity-0" : "opacity-100"
                   }`}
                 >
-                  AI Career Assessment
-                </h3>
-                <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
-                  In Progress
-                </span>
+                  {isPlaying ? (
+                    <Pause className="w-8 h-8 text-white ml-1" />
+                  ) : (
+                    <Play className="w-8 h-8 text-white ml-1" />
+                  )}
+                </button>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                <div
-                  className="bg-gradient-to-r from-emerald-600 to-green-600 h-2 rounded-full"
-                  style={{ width: "65%" }}
-                ></div>
-              </div>
-              <p
-                className={`text-sm ${
-                  isDark ? "text-gray-400" : "text-gray-500"
+
+              {/* Video Controls Overlay */}
+              <div
+                className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 transition-opacity duration-300 ${
+                  showControls || isPlaying ? "opacity-100" : "opacity-0"
                 }`}
               >
-                Step 3 of 5: Technical Skills Assessment
-              </p>
+                <div className="flex items-center gap-4 text-white">
+                  <button
+                    onClick={handleVideoClick}
+                    className="hover:scale-110 transition-transform"
+                  >
+                    {isPlaying ? (
+                      <Pause className="w-6 h-6" />
+                    ) : (
+                      <Play className="w-6 h-6" />
+                    )}
+                  </button>
+
+                  {/* Progress Bar */}
+                  <div
+                    className="flex-1 h-1 bg-white/20 rounded-full cursor-pointer"
+                    onClick={handleProgressClick}
+                  >
+                    <div
+                      className="h-full bg-white rounded-full transition-all duration-100"
+                      style={{
+                        width: `${
+                          duration ? (currentTime / duration) * 100 : 0
+                        }%`,
+                      }}
+                    ></div>
+                  </div>
+
+                  <button
+                    className="hover:scale-110 transition-transform"
+                    onClick={toggleMute}
+                  >
+                    <Volume2
+                      className={`w-5 h-5 ${isMuted ? "opacity-50" : ""}`}
+                    />
+                  </button>
+
+                  <span className="text-sm">
+                    {videoPath ? formatTime(duration) : "2:34"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Playing indicator */}
+              {isPlaying && (
+                <div className="absolute top-4 left-4">
+                  <div className="flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm">
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    LIVE
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Mock Question */}
-            <div
-              className={`p-6 rounded-xl mb-4 ${
-                isDark ? "bg-gray-700" : "bg-gray-50"
-              }`}
-            >
-              <p
-                className={`font-medium mb-4 ${
-                  isDark ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Which machine learning framework are you most proficient in?
-              </p>
-              <div className="space-y-3">
-                {["TensorFlow", "PyTorch", "Scikit-learn", "Keras"].map(
-                  (option, i) => (
-                    <div
-                      key={i}
-                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                        i === 1
-                          ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
-                          : isDark
-                          ? "border-gray-600 hover:border-gray-500"
-                          : "border-gray-200 hover:border-gray-300"
+            {/* Video Info Bar */}
+            <div className={`p-4 ${isDark ? "bg-gray-800" : "bg-white"}`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4
+                    className={`font-semibold ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    AI Career Assessment Demo
+                  </h4>
+                  <p
+                    className={`text-sm ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    See how our platform works in 3 minutes
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <svg
+                      className="w-4 h-4 text-red-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+                    </svg>
+                    <span
+                      className={`text-sm ${
+                        isDark ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
-                      <div className="flex items-center">
-                        <div
-                          className={`w-4 h-4 rounded-full border-2 mr-3 ${
-                            i === 1
-                              ? "border-emerald-500 bg-emerald-500"
-                              : isDark
-                              ? "border-gray-500"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {i === 1 && (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
-                            </div>
-                          )}
-                        </div>
-                        <span
-                          className={`text-sm ${
-                            i === 1
-                              ? "text-emerald-700 dark:text-emerald-400 font-medium"
-                              : isDark
-                              ? "text-gray-300"
-                              : "text-gray-700"
-                          }`}
-                        >
-                          {option}
-                        </span>
-                      </div>
-                    </div>
-                  )
-                )}
+                      1.2k
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <svg
+                      className="w-4 h-4 text-blue-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                    </svg>
+                    <span
+                      className={`text-sm ${
+                        isDark ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      Share
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* Mock Results Preview */}
-            <div
-              className={`text-center p-4 rounded-xl ${
-                isDark ? "bg-gray-700/50" : "bg-emerald-50"
-              }`}
-            >
-              <p
-                className={`text-sm font-medium ${
-                  isDark ? "text-emerald-400" : "text-emerald-700"
-                }`}
-              >
-                AI Prediction: 92% match for ML Engineer roles
-              </p>
             </div>
           </div>
 
@@ -260,13 +364,13 @@ const LandHero = ({ isDark }: landHeroProps) => {
                 isDark ? "text-gray-400" : "text-gray-500"
               }`}
             >
-              ↑ Experience our intuitive assessment interface
+              ↑ Watch our 3-minute demo to see DHITI.AI in action
             </p>
           </div>
 
           {/* Floating Elements */}
-          <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full opacity-20 blur-2xl"></div>
-          <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full opacity-20 blur-2xl"></div>
+          <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-purple-400 to-teal-500 rounded-full opacity-20 blur-2xl"></div>
+          <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-teal-400 to-purple-500 rounded-full opacity-20 blur-2xl"></div>
         </div>
       </div>
     </div>

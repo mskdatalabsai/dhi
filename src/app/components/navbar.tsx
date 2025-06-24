@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Sun,
   Moon,
@@ -81,87 +82,21 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
       }`}
     >
       <div className="container mx-auto px-6">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo Section */}
-          <div className="flex items-center space-x-3">
-            <div className="relative w-12 h-12 rounded-xl overflow-hidden">
-              <svg
-                width="48"
-                height="48"
-                viewBox="0 0 80 80"
-                className="absolute inset-0"
-              >
-                <defs>
-                  <linearGradient
-                    id="navLogo"
-                    x1="0%"
-                    y1="0%"
-                    x2="100%"
-                    y2="100%"
-                  >
-                    <stop offset="0%" stopColor="#059669" />
-                    <stop offset="50%" stopColor="#10b981" />
-                    <stop offset="100%" stopColor="#fbbf24" />
-                  </linearGradient>
-                </defs>
+        <div className="flex items-center justify-around h-20">
+          <Link href="/" className="flex items-center space-x-4">
+            <img src="/logo.png" alt="DHITI Logo" className="h-12 w-auto" />
 
-                <rect
-                  x="10"
-                  y="10"
-                  width="25"
-                  height="25"
-                  fill="#047857"
-                  rx="3"
-                  opacity="0.8"
-                />
-                <rect
-                  x="20"
-                  y="20"
-                  width="20"
-                  height="20"
-                  fill="#059669"
-                  rx="5"
-                  opacity="0.9"
-                />
-                <rect
-                  x="30"
-                  y="30"
-                  width="15"
-                  height="15"
-                  fill="#10b981"
-                  rx="7"
-                  opacity="0.9"
-                />
-                <circle cx="50" cy="25" r="8" fill="#fbbf24" opacity="0.9" />
-                <circle cx="55" cy="35" r="6" fill="#f59e0b" opacity="0.8" />
-                <circle cx="45" cy="45" r="4" fill="#eab308" opacity="0.7" />
-                <path
-                  d="M35 37 L47 29"
-                  stroke="url(#navLogo)"
-                  strokeWidth="2"
-                  opacity="0.6"
-                />
-                <path
-                  d="M40 45 L50 30"
-                  stroke="url(#navLogo)"
-                  strokeWidth="1.5"
-                  opacity="0.5"
-                />
-              </svg>
-            </div>
-            <div className="hidden sm:block">
-              <h1
-                className={`text-xl font-bold ${
-                  isDark ? "text-white" : "text-gray-900"
+            {/* Tagline */}
+            <div className="hidden md:block border-l border-gray-300 dark:border-gray-600 pl-4">
+              <span
+                className={`text-sm font-medium ${
+                  isDark ? "text-gray-300" : "text-gray-600"
                 }`}
               >
-                MSK DATALABS.AI
-              </h1>
-              <p className="text-xs text-gray-500 italic">
-                acquire indefinitely...
-              </p>
+                Discover Heuristic Insights Through Intelligence
+              </span>
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
@@ -250,7 +185,7 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
             <div className="hidden md:block">
               <a
                 href="/payment"
-                className="px-6 py-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold rounded-lg hover:from-emerald-700 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 Get Started
               </a>
@@ -343,7 +278,7 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
               <div className="px-4 pt-4">
                 <a
                   href="/payment"
-                  className="block w-full text-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold rounded-lg hover:from-emerald-700 hover:to-green-700 transition-all duration-200 shadow-lg"
+                  className="block w-full text-center px-6 py-3 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-teal-700 transition-all duration-200 shadow-lg"
                 >
                   Get Started
                 </a>

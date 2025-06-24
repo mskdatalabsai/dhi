@@ -58,7 +58,7 @@ const HomePage = () => {
       >
         {/* Main Content */}
         <div className="container mx-auto px-6 pt-24 pb-16 max-w-7xl">
-          <LandHero isDark={isDark} />
+          <LandHero videoPath="/demo.mp4" isDark={isDark} />
           <Stats isDark={isDark} />
           <WhyChoose isDark={isDark} />
           <HowItWorks isDark={isDark} />

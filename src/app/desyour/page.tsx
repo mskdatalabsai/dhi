@@ -174,7 +174,7 @@ const ProfileComponent = () => {
           <div className="mt-4 flex items-center space-x-4">
             <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-emerald-600 to-green-600 w-0 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-purple-600 to-teal-600 w-0 transition-all duration-500"
                 style={{
                   width: `${
                     (Object.keys(formData).filter(
@@ -222,12 +222,12 @@ const ProfileComponent = () => {
               <div className="flex items-center">
                 <div
                   className={`p-2 rounded-lg ${
-                    isDark ? "bg-gray-700" : "bg-emerald-100"
+                    isDark ? "bg-gray-700" : "bg-purple-100"
                   }`}
                 >
                   <User
                     className={`w-5 h-5 ${
-                      isDark ? "text-emerald-400" : "text-emerald-600"
+                      isDark ? "text-purple-400" : "text-purple-600"
                     }`}
                   />
                 </div>
@@ -261,13 +261,13 @@ const ProfileComponent = () => {
                         errors.firstName
                           ? "border-red-500 focus:ring-red-500"
                           : isDark
-                          ? "border-gray-600 focus:border-emerald-500"
-                          : "border-gray-300 focus:border-emerald-500"
+                          ? "border-gray-600 focus:border-purple-500"
+                          : "border-gray-300 focus:border-purple-500"
                       } ${
                         isDark
                           ? "bg-gray-700 text-white placeholder-gray-400"
                           : "bg-white text-gray-900 placeholder-gray-500"
-                      } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                      } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                       placeholder="John"
                     />
                   </div>
@@ -296,13 +296,13 @@ const ProfileComponent = () => {
                       errors.lastName
                         ? "border-red-500 focus:ring-red-500"
                         : isDark
-                        ? "border-gray-600 focus:border-emerald-500"
-                        : "border-gray-300 focus:border-emerald-500"
+                        ? "border-gray-600 focus:border-purple-500"
+                        : "border-gray-300 focus:border-purple-500"
                     } ${
                       isDark
                         ? "bg-gray-700 text-white placeholder-gray-400"
                         : "bg-white text-gray-900 placeholder-gray-500"
-                    } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                    } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                     placeholder="Doe"
                   />
                   {errors.lastName && (
@@ -338,13 +338,13 @@ const ProfileComponent = () => {
                         errors.email
                           ? "border-red-500 focus:ring-red-500"
                           : isDark
-                          ? "border-gray-600 focus:border-emerald-500"
-                          : "border-gray-300 focus:border-emerald-500"
+                          ? "border-gray-600 focus:border-purple-500"
+                          : "border-gray-300 focus:border-purple-500"
                       } ${
                         isDark
                           ? "bg-gray-700 text-white placeholder-gray-400"
                           : "bg-white text-gray-900 placeholder-gray-500"
-                      } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                      } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                       placeholder="john.doe@company.com"
                     />
                   </div>
@@ -379,9 +379,9 @@ const ProfileComponent = () => {
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-all ${
                         isDark
-                          ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-500"
-                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-500"
-                      } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                          ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
+                      } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                       placeholder="+1 (555) 123-4567"
                     />
                   </div>
@@ -410,9 +410,9 @@ const ProfileComponent = () => {
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-all ${
                         isDark
-                          ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-500"
-                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-500"
-                      } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                          ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
+                      } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                       placeholder="San Francisco, CA"
                     />
                   </div>
@@ -441,9 +441,9 @@ const ProfileComponent = () => {
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-all ${
                         isDark
-                          ? "bg-gray-700 border-gray-600 text-white focus:border-emerald-500"
-                          : "bg-white border-gray-300 text-gray-900 focus:border-emerald-500"
-                      } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                          ? "bg-gray-700 border-gray-600 text-white focus:border-purple-500"
+                          : "bg-white border-gray-300 text-gray-900 focus:border-purple-500"
+                      } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                     />
                   </div>
                 </div>
@@ -469,12 +469,12 @@ const ProfileComponent = () => {
               <div className="flex items-center">
                 <div
                   className={`p-2 rounded-lg ${
-                    isDark ? "bg-gray-700" : "bg-emerald-100"
+                    isDark ? "bg-gray-700" : "bg-teal-100"
                   }`}
                 >
                   <Briefcase
                     className={`w-5 h-5 ${
-                      isDark ? "text-emerald-400" : "text-emerald-600"
+                      isDark ? "text-teal-400" : "text-teal-600"
                     }`}
                   />
                 </div>
@@ -507,13 +507,13 @@ const ProfileComponent = () => {
                       errors.currentRole
                         ? "border-red-500 focus:ring-red-500"
                         : isDark
-                        ? "border-gray-600 focus:border-emerald-500"
-                        : "border-gray-300 focus:border-emerald-500"
+                        ? "border-gray-600 focus:border-purple-500"
+                        : "border-gray-300 focus:border-purple-500"
                     } ${
                       isDark
                         ? "bg-gray-700 text-white placeholder-gray-400"
                         : "bg-white text-gray-900 placeholder-gray-500"
-                    } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                    } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                     placeholder="Data Scientist"
                   />
                   {errors.currentRole && (
@@ -539,9 +539,9 @@ const ProfileComponent = () => {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 rounded-lg border transition-all ${
                       isDark
-                        ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-500"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-500"
-                    } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                        ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
+                    } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                     placeholder="Tech Corp"
                   />
                 </div>
@@ -562,13 +562,13 @@ const ProfileComponent = () => {
                       errors.yearsOfExperience
                         ? "border-red-500 focus:ring-red-500"
                         : isDark
-                        ? "border-gray-600 focus:border-emerald-500"
-                        : "border-gray-300 focus:border-emerald-500"
+                        ? "border-gray-600 focus:border-purple-500"
+                        : "border-gray-300 focus:border-purple-500"
                     } ${
                       isDark
                         ? "bg-gray-700 text-white"
                         : "bg-white text-gray-900"
-                    } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                    } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                   >
                     <option value="">Select experience level</option>
                     <option value="0-1">0-1 years</option>
@@ -599,9 +599,9 @@ const ProfileComponent = () => {
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 rounded-lg border transition-all ${
                       isDark
-                        ? "bg-gray-700 border-gray-600 text-white focus:border-emerald-500"
-                        : "bg-white border-gray-300 text-gray-900 focus:border-emerald-500"
-                    } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                        ? "bg-gray-700 border-gray-600 text-white focus:border-purple-500"
+                        : "bg-white border-gray-300 text-gray-900 focus:border-purple-500"
+                    } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                   >
                     <option value="">Select industry</option>
                     <option value="Technology">Technology</option>
@@ -636,12 +636,12 @@ const ProfileComponent = () => {
               <div className="flex items-center">
                 <div
                   className={`p-2 rounded-lg ${
-                    isDark ? "bg-gray-700" : "bg-emerald-100"
+                    isDark ? "bg-gray-700" : "bg-purple-100"
                   }`}
                 >
                   <Target
                     className={`w-5 h-5 ${
-                      isDark ? "text-emerald-400" : "text-emerald-600"
+                      isDark ? "text-purple-400" : "text-purple-600"
                     }`}
                   />
                 </div>
@@ -675,15 +675,15 @@ const ProfileComponent = () => {
                     }
                     className={`flex-1 px-4 py-3 rounded-lg border transition-all ${
                       isDark
-                        ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-500"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-500"
-                    } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                        ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
+                    } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                     placeholder="e.g., Senior Data Scientist, ML Engineer"
                   />
                   <button
                     type="button"
                     onClick={addDesiredRole}
-                    className="px-4 py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-lg transition-all"
+                    className="px-4 py-3 bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white rounded-lg transition-all"
                   >
                     <Plus className="w-5 h-5" />
                   </button>
@@ -694,8 +694,8 @@ const ProfileComponent = () => {
                       key={index}
                       className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm ${
                         isDark
-                          ? "bg-emerald-900/30 text-emerald-400 border border-emerald-700"
-                          : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          ? "bg-purple-900/30 text-purple-400 border border-purple-700"
+                          : "bg-purple-50 text-purple-700 border border-purple-200"
                       }`}
                     >
                       {role}
@@ -704,8 +704,8 @@ const ProfileComponent = () => {
                         onClick={() => removeDesiredRole(role)}
                         className={`ml-2 ${
                           isDark
-                            ? "text-emerald-400 hover:text-emerald-300"
-                            : "text-emerald-600 hover:text-emerald-800"
+                            ? "text-purple-400 hover:text-purple-300"
+                            : "text-purple-600 hover:text-purple-800"
                         }`}
                       >
                         <X className="w-3 h-3" />
@@ -730,9 +730,9 @@ const ProfileComponent = () => {
                   rows={3}
                   className={`w-full px-4 py-3 rounded-lg border transition-all resize-none ${
                     isDark
-                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-500"
-                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-500"
-                  } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
+                  } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                   placeholder="Describe your short-term and long-term career aspirations..."
                 />
               </div>
@@ -757,12 +757,12 @@ const ProfileComponent = () => {
               <div className="flex items-center">
                 <div
                   className={`p-2 rounded-lg ${
-                    isDark ? "bg-gray-700" : "bg-emerald-100"
+                    isDark ? "bg-gray-700" : "bg-teal-100"
                   }`}
                 >
                   <Award
                     className={`w-5 h-5 ${
-                      isDark ? "text-emerald-400" : "text-emerald-600"
+                      isDark ? "text-teal-400" : "text-teal-600"
                     }`}
                   />
                 </div>
@@ -795,15 +795,15 @@ const ProfileComponent = () => {
                     }
                     className={`flex-1 px-4 py-3 rounded-lg border transition-all ${
                       isDark
-                        ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-500"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-500"
-                    } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                        ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
+                    } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                     placeholder="e.g., Python, Machine Learning, SQL"
                   />
                   <button
                     type="button"
                     onClick={addSkill}
-                    className="px-4 py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-lg transition-all"
+                    className="px-4 py-3 bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white rounded-lg transition-all"
                   >
                     <Plus className="w-5 h-5" />
                   </button>
@@ -814,8 +814,8 @@ const ProfileComponent = () => {
                       key={index}
                       className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm ${
                         isDark
-                          ? "bg-emerald-900/30 text-emerald-400 border border-emerald-700"
-                          : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          ? "bg-teal-900/30 text-teal-400 border border-teal-700"
+                          : "bg-teal-50 text-teal-700 border border-teal-200"
                       }`}
                     >
                       {skill}
@@ -824,8 +824,8 @@ const ProfileComponent = () => {
                         onClick={() => removeSkill(skill)}
                         className={`ml-2 ${
                           isDark
-                            ? "text-emerald-400 hover:text-emerald-300"
-                            : "text-emerald-600 hover:text-emerald-800"
+                            ? "text-teal-400 hover:text-teal-300"
+                            : "text-teal-600 hover:text-teal-800"
                         }`}
                       >
                         <X className="w-3 h-3" />
@@ -850,9 +850,9 @@ const ProfileComponent = () => {
                   rows={4}
                   className={`w-full px-4 py-3 rounded-lg border transition-all resize-none ${
                     isDark
-                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-500"
-                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-500"
-                  } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
+                  } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                   placeholder="Provide a brief professional summary highlighting your experience, achievements, and what makes you unique..."
                 />
               </div>
@@ -881,9 +881,9 @@ const ProfileComponent = () => {
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-all ${
                         isDark
-                          ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-500"
-                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-500"
-                      } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                          ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
+                      } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                       placeholder="linkedin.com/in/yourprofile"
                     />
                   </div>
@@ -912,9 +912,9 @@ const ProfileComponent = () => {
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-all ${
                         isDark
-                          ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-500"
-                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-500"
-                      } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                          ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500"
+                      } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
                       placeholder="yourportfolio.com"
                     />
                   </div>
@@ -931,7 +931,7 @@ const ProfileComponent = () => {
           >
             <button
               type="submit"
-              className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold rounded-lg hover:from-emerald-700 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               <Check className="w-5 h-5 mr-2" />
               Complete Profile

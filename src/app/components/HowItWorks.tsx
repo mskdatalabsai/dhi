@@ -33,8 +33,8 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ isDark }) => {
             isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"
           }`}
         >
-          <div className="w-20 h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <span className="text-3xl font-bold text-emerald-600">1</span>
+          <div className="w-20 h-20 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <span className="text-3xl font-bold text-purple-600">1</span>
           </div>
           <h3
             className={`text-2xl font-bold mb-4 ${
@@ -58,8 +58,8 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ isDark }) => {
             isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"
           }`}
         >
-          <div className="w-20 h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <span className="text-3xl font-bold text-emerald-600">2</span>
+          <div className="w-20 h-20 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <span className="text-3xl font-bold text-teal-600">2</span>
           </div>
           <h3
             className={`text-2xl font-bold mb-4 ${
@@ -83,8 +83,8 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ isDark }) => {
             isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"
           }`}
         >
-          <div className="w-20 h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <span className="text-3xl font-bold text-emerald-600">3</span>
+          <div className="w-20 h-20 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <span className="text-3xl font-bold text-purple-600">3</span>
           </div>
           <h3
             className={`text-2xl font-bold mb-4 ${

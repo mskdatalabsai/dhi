@@ -43,7 +43,7 @@ const CTAForm: React.FC<CTAFormProps> = ({
                 placeholder="Full Name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className={`w-full px-6 py-4 rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+                className={`w-full px-6 py-4 rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                   isDark
                     ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                     : "bg-white border-gray-200 text-gray-900 placeholder-gray-500"
@@ -55,7 +55,7 @@ const CTAForm: React.FC<CTAFormProps> = ({
                 placeholder="Email Address"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full px-6 py-4 rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+                className={`w-full px-6 py-4 rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                   isDark
                     ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                     : "bg-white border-gray-200 text-gray-900 placeholder-gray-500"
@@ -68,7 +68,7 @@ const CTAForm: React.FC<CTAFormProps> = ({
               placeholder="Company Name"
               value={formData.company}
               onChange={handleInputChange}
-              className={`w-full px-6 py-4 rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+              className={`w-full px-6 py-4 rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                 isDark
                   ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                   : "bg-white border-gray-200 text-gray-900 placeholder-gray-500"
@@ -78,7 +78,7 @@ const CTAForm: React.FC<CTAFormProps> = ({
               <button
                 type="button"
                 onClick={() => (window.location.href = "/payment")}
-                className="inline-flex items-center px-10 py-5 bg-gradient-to-r from-emerald-600 to-green-600 text-white text-lg font-semibold rounded-xl hover:from-emerald-700 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-xl hover:shadow-2xl"
+                className="inline-flex items-center px-10 py-5 bg-gradient-to-r from-purple-600 to-teal-600 text-white text-lg font-semibold rounded-xl hover:from-purple-700 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 shadow-xl hover:shadow-2xl"
               >
                 Start Free Consultation
                 <ArrowRight className="ml-3 w-5 h-5" />

@@ -15,7 +15,7 @@ const Stats: React.FC<StatsProps> = ({ isDark }) => {
     >
       <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
         <div className="text-center">
-          <div className="text-3xl md:text-4xl font-bold text-emerald-600 mb-2">
+          <div className="text-3xl md:text-4xl font-bold text-purple-600 mb-2">
             95%
           </div>
           <div
@@ -25,7 +25,7 @@ const Stats: React.FC<StatsProps> = ({ isDark }) => {
           </div>
         </div>
         <div className="text-center">
-          <div className="text-3xl md:text-4xl font-bold text-emerald-600 mb-2">
+          <div className="text-3xl md:text-4xl font-bold text-purple-600 mb-2">
             5,000+
           </div>
           <div
@@ -35,7 +35,7 @@ const Stats: React.FC<StatsProps> = ({ isDark }) => {
           </div>
         </div>
         <div className="text-center">
-          <div className="text-3xl md:text-4xl font-bold text-emerald-600 mb-2">
+          <div className="text-3xl md:text-4xl font-bold text-purple-600 mb-2">
             15min
           </div>
           <div
@@ -45,7 +45,7 @@ const Stats: React.FC<StatsProps> = ({ isDark }) => {
           </div>
         </div>
         <div className="text-center">
-          <div className="text-3xl md:text-4xl font-bold text-emerald-600 mb-2">
+          <div className="text-3xl md:text-4xl font-bold text-purple-600 mb-2">
             $85K
           </div>
           <div
