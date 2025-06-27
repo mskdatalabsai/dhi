@@ -1,0 +1,450 @@
+[
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q1",
+    "question": "What is the primary function of a compiler?",
+    "options": {
+      "a": "To execute machine code",
+      "b": "To translate high-level code into low-level code",
+      "c": "To debug program errors",
+      "d": "To manage project dependencies"
+    },
+    "correctOption": "b",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q2",
+    "question": "Which of the following is an example of an interpreted language?",
+    "options": {
+      "a": "C++",
+      "b": "Java",
+      "c": "Python",
+      "d": "Assembly"
+    },
+    "correctOption": "c",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q3",
+    "question": "What does 'IDE' stand for in software development?",
+    "options": {
+      "a": "Integrated Development Environment",
+      "b": "Intelligent Design Editor",
+      "c": "Interactive Debugging Engine",
+      "d": "Internal Data Exchange"
+    },
+    "correctOption": "a",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q4",
+    "question": "Which data structure uses LIFO (Last In, First Out) principle?",
+    "options": {
+      "a": "Queue",
+      "b": "Stack",
+      "c": "Linked List",
+      "d": "Array"
+    },
+    "correctOption": "b",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q5",
+    "question": "What is a 'variable' in programming?",
+    "options": {
+      "a": "A fixed value in a program",
+      "b": "A named storage location that can hold a value",
+      "c": "A type of operator",
+      "d": "A function that returns a value"
+    },
+    "correctOption": "b",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q6",
+    "question": "Which symbol is commonly used for single-line comments in many programming languages?",
+    "options": {
+      "a": "/**/",
+      "b": "//",
+      "c": "#",
+      "d": ""
+    },
+    "correctOption": "b",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q7",
+    "question": "What is the purpose of a 'for loop'?",
+    "options": {
+      "a": "To make a decision based on a condition",
+      "b": "To repeat a block of code a specific number of times",
+      "c": "To define a new function",
+      "d": "To handle exceptions"
+    },
+    "correctOption": "b",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q8",
+    "question": "Which of the following is a control flow statement?",
+    "options": {
+      "a": "Variable declaration",
+      "b": "Function call",
+      "c": "If-else statement",
+      "d": "Arithmetic operation"
+    },
+    "correctOption": "c",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q9",
+    "question": "What does 'API' stand for?",
+    "options": {
+      "a": "Application Programming Interface",
+      "b": "Advanced Project Integration",
+      "c": "Automated Program Instruction",
+      "d": "Application Process Interchange"
+    },
+    "correctOption": "a",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q10",
+    "question": "Which term describes breaking down a problem into smaller, manageable sub-problems?",
+    "options": {
+      "a": "Encapsulation",
+      "b": "Abstraction",
+      "c": "Decomposition",
+      "d": "Polymorphism"
+    },
+    "correctOption": "c",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q11",
+    "question": "What is the output of `5 + '2'` in JavaScript?",
+    "options": {
+      "a": "7",
+      "b": "52",
+      "c": "Error",
+      "d": "Undefined"
+    },
+    "correctOption": "b",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q12",
+    "question": "Which of these is a common version control system?",
+    "options": {
+      "a": "Microsoft Word",
+      "b": "Git",
+      "c": "Adobe Photoshop",
+      "d": "Excel"
+    },
+    "correctOption": "b",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q13",
+    "question": "What is the purpose of 'debugging'?",
+    "options": {
+      "a": "To write new code",
+      "b": "To identify and fix errors in a program",
+      "c": "To optimize code performance",
+      "d": "To deploy an application"
+    },
+    "correctOption": "b",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q14",
+    "question": "In object-oriented programming, what is an 'object'?",
+    "options": {
+      "a": "A blueprint for creating instances",
+      "b": "An instance of a class",
+      "c": "A method within a class",
+      "d": "A variable outside a class"
+    },
+    "correctOption": "b",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q15",
+    "question": "What does 'HTML' stand for?",
+    "options": {
+      "a": "HyperText Markup Language",
+      "b": "High-Level Text Management",
+      "c": "Hyperlink and Text Mainframe",
+      "d": "Home Tool Markup Language"
+    },
+    "correctOption": "a",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q16",
+    "question": "Which of these is NOT a primitive data type in most programming languages?",
+    "options": {
+      "a": "Integer",
+      "b": "String",
+      "c": "Boolean",
+      "d": "Object"
+    },
+    "correctOption": "d",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q17",
+    "question": "What is the purpose of CSS in web development?",
+    "options": {
+      "a": "To define the structure of web pages",
+      "b": "To add interactivity to web pages",
+      "c": "To style the appearance of web pages",
+      "d": "To manage server-side logic"
+    },
+    "correctOption": "c",
+    "level": "easy"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q1530",
+    "question": "What is 'Cross-Origin Resource Sharing (CORS)' and its importance?",
+    "options": {
+      "a": "A way to share resources between different servers without restrictions.",
+      "b": "A security mechanism that allows a web page to make XMLHttpRequests to another domain outside the domain from which the first resource was served.",
+      "c": "A method for optimizing image loading.",
+      "d": "A protocol for real-time communication."
+    },
+    "correctOption": "b",
+    "level": "medium"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q1531",
+    "question": "Explain the concept of 'Docker Networking'.",
+    "options": {
+      "a": "Connecting Docker containers to the internet only.",
+      "b": "The way Docker containers communicate with each other and with the outside world, using various network drivers and configurations.",
+      "c": "A type of network router.",
+      "d": "A method for encrypting Docker traffic."
+    },
+    "correctOption": "b",
+    "level": "medium"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q1532",
+    "question": "What are 'Atomic Design Principles' in frontend development?",
+    "options": {
+      "a": "Designing applications from large components downwards.",
+      "b": "A methodology for creating design systems by breaking down interfaces into their fundamental elements: atoms, molecules, organisms, templates, and pages.",
+      "c": "A method for optimizing CSS.",
+      "d": "A principle for functional programming."
+    },
+    "correctOption": "b",
+    "level": "medium"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q1533",
+    "question": "Describe 'Test Doubles' (Stubs, Mocks, Spies) in unit testing.",
+    "options": {
+      "a": "Writing duplicate tests.",
+      "b": "Generic term for objects that stand in for real objects during testing, enabling isolation and control over dependencies.",
+      "c": "A type of performance testing.",
+      "d": "Tools for automated test execution."
+    },
+    "correctOption": "b",
+    "level": "medium"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q1534",
+    "question": "What is 'Distributed Message Queue' and its common uses?",
+    "options": {
+      "a": "A message queue on a single server.",
+      "b": "A messaging system that operates across multiple machines, providing reliable asynchronous communication between distributed services (e.g., Kafka, RabbitMQ).",
+      "c": "A tool for real-time chat.",
+      "d": "A method for storing temporary data."
+    },
+    "correctOption": "b",
+    "level": "medium"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q1535",
+    "question": "Explain the concept of 'Immutable Data Structures'.",
+    "options": {
+      "a": "Data structures that can be modified after creation.",
+      "b": "Data structures that cannot be changed after they are created; any modification results in a new data structure.",
+      "c": "Data structures stored in a database.",
+      "d": "Data structures that are only accessible by one thread."
+    },
+    "correctOption": "b",
+    "level": "medium"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q1536",
+    "question": "What is 'Event-Driven Architecture (EDA)'?",
+    "options": {
+      "a": "An architecture where components communicate synchronously.",
+      "b": "An architecture where producers publish events and consumers react to those events, enabling loose coupling and scalability.",
+      "c": "An architecture based on client-server communication.",
+      "d": "An architecture for batch processing."
+    },
+    "correctOption": "b",
+    "level": "medium"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q1537",
+    "question": "Describe the 'Builder Pattern'.",
+    "options": {
+      "a": "A pattern for creating simple objects.",
+      "b": "A creational design pattern that allows construction of a complex object step by step, separating its construction from its representation.",
+      "c": "A pattern for ensuring a single instance of a class.",
+      "d": "A pattern for observing changes in an object's state."
+    },
+    "correctOption": "b",
+    "level": "medium"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q1538",
+    "question": "What is 'Server-Sent Events (SSE)' and its primary use case?",
+    "options": {
+      "a": "A protocol for two-way communication.",
+      "b": "A server-push technology enabling a client to receive automatic updates from a server over an HTTP connection, ideal for one-way data streaming.",
+      "c": "A method for encrypting web traffic.",
+      "d": "A way to send data from client to server."
+    },
+    "correctOption": "b",
+    "level": "medium"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q1539",
+    "question": "Explain 'Sharding' in database management.",
+    "options": {
+      "a": "Creating backups of the database.",
+      "b": "A type of horizontal partitioning that divides a database into smaller, faster, more easily manageable parts called data shards.",
+      "c": "Optimizing database queries.",
+      "d": "Encrypting database content."
+    },
+    "correctOption": "b",
+    "level": "medium"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q1540",
+    "question": "What is 'SQL Injection' and how can it be mitigated?",
+    "options": {
+      "a": "A method for optimizing SQL queries.",
+      "b": "A code injection technique that allows attackers to manipulate database queries by injecting malicious SQL code into input fields.",
+      "c": "A way to add new features to a database.",
+      "d": "A process for migrating data between databases."
+    },
+    "correctOption": "b",
+    "level": "medium"
+  },
+   {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q2997",
+    "question": "In Go, which keyword is used to define a lightweight thread of execution?",
+    "options": {
+      "a": "thread",
+      "b": "goroutine",
+      "c": "co",
+      "d": "async"
+    },
+    "correctOption": "b",
+    "level": "advanced"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q2998",
+    "question": "In TypeScript, what does the '?' symbol indicate in function parameters?",
+    "options": {
+      "a": "Mandatory parameter",
+      "b": "Overloaded parameter",
+      "c": "Optional parameter",
+      "d": "Private parameter"
+    },
+    "correctOption": "c",
+    "level": "advanced"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q2999",
+    "question": "Which language supports pattern matching as a native feature in switch-case statements?",
+    "options": {
+      "a": "Java 17",
+      "b": "Python 2",
+      "c": "C",
+      "d": "PHP"
+    },
+    "correctOption": "a",
+    "level": "advanced"
+  },
+  {
+    "functionalArea": "Engineering and Development",
+    "roleTitle": "Software Engineer / Developer",
+    "questionId": "ED_SED_Q3000",
+    "question": "What does 'await' do in asynchronous JavaScript?",
+    "options": {
+      "a": "Pauses execution until promise is resolved",
+      "b": "Cancels the function",
+      "c": "Returns a callback",
+      "d": "Queues a timeout"
+    },
+    "correctOption": "a",
+    "level": "advanced"
+  }
+] 

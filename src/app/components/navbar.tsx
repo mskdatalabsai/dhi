@@ -82,7 +82,7 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
       }`}
     >
       <div className="container mx-auto px-6">
-        <div className="flex items-center justify-around h-20">
+        <div className="flex items-center justify-between h-20">
           <Link href="/" className="flex items-center space-x-4">
             <img src="/logo.png" alt="DHITI Logo" className="h-12 w-auto" />
 

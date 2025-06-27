@@ -81,6 +81,19 @@ const LandHero = ({ isDark, videoPath }: landHeroProps) => {
               </span>
               you were born to do
             </h1>
+
+            {/* TAGLINE ADDED HERE - Below heading, above description */}
+            <p
+              className={`text-lg md:text-xl font-semibold mb-4 ${
+                isDark ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-teal-500 to-blue-600">
+                Beyond Skills. Beyond Resumes. Discover Your IT Future, Fueled
+                by Passion.
+              </span>
+            </p>
+
             <p
               className={`text-xl leading-relaxed mb-8 ${
                 isDark ? "text-gray-300" : "text-gray-600"
@@ -120,48 +133,57 @@ const LandHero = ({ isDark, videoPath }: landHeroProps) => {
             </button>
           </div>
 
-          {/* Trust Indicators */}
-          <div className="flex flex-wrap items-center gap-8">
+          {/* Trust Indicators - Updated for Pre-Launch */}
+          <div className="flex flex-wrap items-center gap-6">
+            {/* Early Access Members */}
             <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className={`w-10 h-10 rounded-full border-2 ${
-                      isDark ? "border-gray-800" : "border-white"
-                    } overflow-hidden ${
-                      isDark ? "bg-gray-700" : "bg-gray-200"
-                    }`}
-                  >
-                    <div className="w-full h-full bg-gradient-to-br from-purple-400 to-teal-500" />
-                  </div>
-                ))}
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-teal-500 flex items-center justify-center">
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
+                </svg>
               </div>
               <div
                 className={`text-sm ${
                   isDark ? "text-gray-300" : "text-gray-600"
                 }`}
               >
-                <span className="font-semibold">5,000+</span> professionals
-                placed
+                <span className="font-semibold">500+</span> early access signups
               </div>
             </div>
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((i) => (
+
+            {/* Powered by AI*/}
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-teal-500 flex items-center justify-center">
                 <svg
-                  key={i}
-                  className="w-5 h-5 text-yellow-400 fill-current"
-                  viewBox="0 0 20 20"
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
                 </svg>
-              ))}
+              </div>
               <span
-                className={`text-sm ml-2 ${
+                className={`text-sm ${
                   isDark ? "text-gray-300" : "text-gray-600"
                 }`}
               >
-                4.9/5 rating
+                Powered by <span className="font-semibold">Advanced AI</span>
               </span>
             </div>
           </div>
@@ -373,6 +395,17 @@ const LandHero = ({ isDark, videoPath }: landHeroProps) => {
           <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-teal-400 to-purple-500 rounded-full opacity-20 blur-2xl"></div>
         </div>
       </div>
+
+      {/* ALTERNATIVE PLACEMENT: Below entire grid section */}
+      {/* <div className="text-center mt-12">
+        <p className={`text-xl md:text-2xl font-semibold ${
+          isDark ? "text-gray-300" : "text-gray-700"
+        }`}>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-teal-500 to-blue-600">
+            Beyond Skills. Beyond Resumes. Discover Your IT Future, Fueled by Passion.
+          </span>
+        </p>
+      </div> */}
     </div>
   );
 };
