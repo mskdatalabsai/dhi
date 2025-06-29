@@ -310,7 +310,7 @@ const SurveyPage = () => {
         />
 
         {/* Add difficulty indicator */}
-        {currentQ?.level && (
+        {/* {currentQ?.level && (
           <div
             className={`text-sm mb-2 ${
               isDark ? "text-gray-400" : "text-gray-600"
@@ -329,7 +329,7 @@ const SurveyPage = () => {
               {currentQ.level.charAt(0).toUpperCase() + currentQ.level.slice(1)}
             </span>
           </div>
-        )}
+        )} */}
 
         <QuestionCard
           question={currentQ}

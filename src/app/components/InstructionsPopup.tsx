@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// components/InstructionsPopup.tsx
+import React from "react";
 
 interface InstructionsPopupProps {
   isDark: boolean;
@@ -9,141 +10,139 @@ const InstructionsPopup: React.FC<InstructionsPopupProps> = ({
   isDark,
   onAccept,
 }) => {
-  const [isChecked, setIsChecked] = useState(false);
-
-  const handleProceed = () => {
-    if (isChecked) {
-      onAccept();
-    }
-  };
+  const instructions = [
+    "You have 60 minutes to complete the assessment",
+    "Each question is multiple choice with only one correct answer",
+    "All questions are mandatory - you cannot skip any question",
+    "Your progress is automatically saved",
+    "Once you submit, you cannot change your answers",
+  ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
+    <div className="flex items-center justify-center min-h-full p-4">
       <div
-        className={`absolute inset-0 ${isDark ? "bg-black/70" : "bg-black/50"}`}
-      />
-
-      {/* Modal */}
-      <div
-        className={`relative max-w-2xl w-full mx-4 p-8 rounded-2xl shadow-2xl ${
+        className={`w-full max-w-2xl mx-auto ${
           isDark ? "bg-gray-800" : "bg-white"
-        }`}
+        } rounded-2xl shadow-2xl`}
       >
-        {/* Header */}
-        <div className="mb-6">
+        {/* Content */}
+        <div className="p-6 sm:p-8">
+          {/* Removed max-height and overflow restrictions */}
+          {/* Welcome Message */}
+
+          {/* Instructions */}
           <h2
-            className={`text-3xl font-bold mb-2 ${
-              isDark ? "text-white" : "text-gray-900"
+            className={`text-lg sm:text-xl font-semibold mb-4 ${
+              isDark ? "text-white" : "text-gray-800"
             }`}
           >
-            Survey Instructions
+            Instructions:
           </h2>
-          <p
-            className={`text-lg ${isDark ? "text-gray-300" : "text-gray-600"}`}
+
+          <ul className="space-y-3 mb-6">
+            {instructions.map((instruction, index) => (
+              <li
+                key={index}
+                className={`flex items-start ${
+                  isDark ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
+                <span
+                  className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold mr-3 mt-0.5 flex-shrink-0 ${
+                    isDark
+                      ? "bg-purple-900 text-purple-300"
+                      : "bg-purple-100 text-purple-600"
+                  }`}
+                >
+                  {index + 1}
+                </span>
+                <span className="text-sm sm:text-base">{instruction}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* Important Notes */}
+          <div
+            className={`p-4 rounded-lg border-2 ${
+              isDark
+                ? "bg-yellow-900 bg-opacity-20 border-yellow-700 text-yellow-300"
+                : "bg-yellow-50 border-yellow-300 text-yellow-800"
+            }`}
           >
-            Please read the following instructions carefully before proceeding
-          </p>
+            <h3 className="font-semibold mb-2 flex items-center text-sm sm:text-base">
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Important
+            </h3>
+            <ul className="text-xs sm:text-sm space-y-1">
+              <li>
+                • The timer starts immediately after you accept these
+                instructions
+              </li>
+              <li>
+                • Make sure you&apos;re in a quiet environment without
+                distractions
+              </li>
+              <li>
+                • Use a stable internet connection to avoid losing progress
+              </li>
+            </ul>
+          </div>
         </div>
 
-        {/* Instructions Content */}
+        {/* Footer with Accept Button */}
         <div
-          className={`mb-8 p-6 rounded-lg ${
-            isDark ? "bg-gray-700/50" : "bg-gray-50"
+          className={`p-6 sm:p-8 border-t ${
+            isDark
+              ? "bg-gray-900 border-gray-700"
+              : "bg-gray-50 border-gray-200"
           }`}
         >
-          <ul
-            className={`space-y-3 ${
-              isDark ? "text-gray-200" : "text-gray-700"
-            }`}
-          >
-            <li className="flex items-start">
-              <span className="text-purple-500 mr-3 mt-1">•</span>
-              <span>
-                This survey consists of 60 questions designed to assess your
-                Data Science knowledge and interests.
-              </span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-purple-500 mr-3 mt-1">•</span>
-              <span>
-                You have <strong>60 minutes</strong> to complete all questions.
-                The timer will start once you click &quot;Proceed&quot;.
-              </span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-purple-500 mr-3 mt-1">•</span>
-              <span>
-                Some questions are marked as required and must be answered
-                before proceeding.
-              </span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-purple-500 mr-3 mt-1">•</span>
-              <span>
-                You can navigate between questions using the Previous and Next
-                buttons.
-              </span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-purple-500 mr-3 mt-1">•</span>
-              <span>
-                Your progress is automatically saved as you move between
-                questions.
-              </span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-purple-500 mr-3 mt-1">•</span>
-              <span>
-                Once the timer expires, your survey will be automatically
-                submitted.
-              </span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-purple-500 mr-3 mt-1">•</span>
-              <span>
-                Please ensure you have a stable internet connection throughout
-                the survey.
-              </span>
-            </li>
-          </ul>
-        </div>
-
-        {/* Checkbox */}
-        <div className="mb-6">
-          <label className="flex items-center cursor-pointer">
+          <div className="flex items-center mb-4">
             <input
               type="checkbox"
-              checked={isChecked}
-              onChange={(e) => setIsChecked(e.target.checked)}
-              className="w-5 h-5 text-purple-600 border-2 rounded focus:ring-purple-500 focus:ring-2 mr-3"
+              id="agree"
+              className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+              required
             />
-            <span
-              className={`select-none ${
-                isDark ? "text-gray-200" : "text-gray-700"
+            <label
+              htmlFor="agree"
+              className={`ml-2 text-sm ${
+                isDark ? "text-gray-300" : "text-gray-700"
               }`}
             >
-              I have read and understood the instructions above
-            </span>
-          </label>
-        </div>
+              I have read and understood all the instructions
+            </label>
+          </div>
 
-        {/* Button */}
-        <button
-          onClick={handleProceed}
-          disabled={!isChecked}
-          className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 ${
-            isChecked
-              ? "bg-purple-600 hover:bg-purple-700 text-white cursor-pointer transform hover:scale-[1.02]"
-              : isDark
-              ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-              : "bg-gray-200 text-gray-400 cursor-not-allowed"
-          }`}
-        >
-          {isChecked
-            ? "Proceed to Survey"
-            : "Please accept the instructions to proceed"}
-        </button>
+          <button
+            onClick={onAccept}
+            className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all transform hover:scale-105 ${
+              isDark
+                ? "bg-purple-600 hover:bg-purple-700"
+                : "bg-purple-600 hover:bg-purple-700"
+            } focus:outline-none focus:ring-4 focus:ring-purple-500 focus:ring-opacity-50`}
+          >
+            Start Assessment
+          </button>
+
+          <p
+            className={`text-xs text-center mt-3 ${
+              isDark ? "text-gray-400" : "text-gray-600"
+            }`}
+          >
+            By clicking Start Assessment, you agree to begin the timed test
+          </p>
+        </div>
       </div>
     </div>
   );

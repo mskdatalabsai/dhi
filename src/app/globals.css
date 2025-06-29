@@ -24,3 +24,21 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* Force scrolling */
+html,
+body {
+  overflow: auto !important;
+  height: auto !important;
+  min-height: 100vh;
+}
+
+/* Remove any overflow hidden */
+* {
+  overflow: visible !important;
+}
+
+/* Only hide horizontal overflow */
+body {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}

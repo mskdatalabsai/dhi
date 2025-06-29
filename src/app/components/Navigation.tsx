@@ -1,7 +1,7 @@
+// components/Navigation.tsx
 import React from "react";
-import { ChevronLeft, ChevronRight, Save, Check } from "lucide-react";
 
-interface Props {
+interface NavigationProps {
   isDark: boolean;
   currentQuestion: number;
   totalQuestions: number;
@@ -12,7 +12,7 @@ interface Props {
   onSubmit: () => void;
 }
 
-const Navigation: React.FC<Props> = ({
+const Navigation: React.FC<NavigationProps> = ({
   isDark,
   currentQuestion,
   totalQuestions,
@@ -22,61 +22,57 @@ const Navigation: React.FC<Props> = ({
   onSave,
   onSubmit,
 }) => {
+  const isFirstQuestion = currentQuestion === 0;
+  const isLastQuestion = currentQuestion === totalQuestions - 1;
+
   return (
-    <div className="flex justify-between items-center mt-4">
+    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
       <button
         onClick={onPrev}
-        disabled={currentQuestion === 0}
-        className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all text-sm ${
-          currentQuestion === 0
-            ? "opacity-50 cursor-not-allowed"
+        disabled={isFirstQuestion}
+        className={`w-full sm:w-auto px-6 py-3 rounded-lg font-medium transition-all ${
+          isFirstQuestion
+            ? isDark
+              ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+              : "bg-gray-200 text-gray-400 cursor-not-allowed"
             : isDark
-            ? "bg-gray-700 hover:bg-gray-600 text-white"
-            : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+            ? "bg-gray-700 text-white hover:bg-gray-600"
+            : "bg-gray-200 text-gray-800 hover:bg-gray-300"
         }`}
       >
-        <ChevronLeft className="w-4 h-4" />
-        Previous
+        ← Previous
       </button>
 
-      <div className="flex space-x-3">
+      <div className="flex gap-4 w-full sm:w-auto">
         <button
           onClick={onSave}
-          className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-all text-sm ${
+          className={`flex-1 sm:flex-initial px-6 py-3 rounded-lg font-medium transition-all ${
             isDark
-              ? "bg-gray-700 hover:bg-gray-600 text-white"
-              : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+              ? "bg-gray-700 text-white hover:bg-gray-600"
+              : "bg-gray-200 text-gray-800 hover:bg-gray-300"
           }`}
         >
-          <Save className="w-3 h-3" />
-          Save
+          Save Progress
         </button>
 
-        {currentQuestion === totalQuestions - 1 ? (
+        {isLastQuestion ? (
           <button
             onClick={onSubmit}
             disabled={isSubmitting}
-            className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 text-sm"
+            className={`flex-1 sm:flex-initial px-6 py-3 rounded-lg font-medium transition-all ${
+              isSubmitting
+                ? "bg-gray-400 text-white cursor-not-allowed"
+                : "bg-green-600 text-white hover:bg-green-700"
+            }`}
           >
-            {isSubmitting ? (
-              <>
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                Submitting...
-              </>
-            ) : (
-              <>
-                Submit Survey
-                <Check className="w-4 h-4" />
-              </>
-            )}
+            {isSubmitting ? "Submitting..." : "Submit Assessment"}
           </button>
         ) : (
           <button
             onClick={onNext}
-            className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white rounded-lg font-medium transition-all text-sm"
+            className="flex-1 sm:flex-initial px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-all"
           >
-            Next
-            <ChevronRight className="w-4 h-4" />
+            Next →
           </button>
         )}
       </div>
