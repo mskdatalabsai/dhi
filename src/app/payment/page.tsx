@@ -61,13 +61,13 @@ const PaymentPage = () => {
       // In a real app, you would call your backend to create an order
       // For demo purposes, we'll use test data
       const options = {
-        key: "rzp_test_9999999999", // Test API Key - replace with your test key
+        key: "rzp_test_Hg09l83CTDK2mA", // Test API Key - replace with your test key
         amount: orderData.amount,
         currency: orderData.currency,
         name: "AI Career Assessment",
         description: "Career Assessment Fee",
         image: "/logo.png", // Add your logo URL
-        order_id: "order_" + Date.now(), // In real app, get this from backend
+        // order_id: "order_" + Date.now(), // In real app, get this from backend
         handler: function (response: any) {
           // Payment success callback
           console.log("Payment Success:", response);
