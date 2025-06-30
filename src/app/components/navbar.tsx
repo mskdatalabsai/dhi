@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   Sun,
   Moon,
@@ -13,14 +15,19 @@ import {
   Target,
   Phone,
   Home,
+  LogOut,
+  LogIn,
 } from "lucide-react";
 
 type NavbarProps = {
   isDark: boolean;
   toggleTheme: () => void;
+  isAuthenticated?: boolean;
 };
 
 const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCoursesDropdownOpen, setIsCoursesDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -165,6 +172,44 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
+            {/* User Info & Auth */}
+            {session ? (
+              <div className="hidden md:flex items-center space-x-3">
+                <span
+                  className={`text-sm ${
+                    isDark ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  {session.user?.email}
+                </span>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    isDark
+                      ? "text-gray-300 hover:text-white hover:bg-gray-800"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            ) : (
+              <div className="hidden md:flex items-center space-x-3">
+                <button
+                  onClick={() => router.push("/auth/signin")}
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    isDark
+                      ? "text-gray-300 hover:text-white hover:bg-gray-800"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Sign In</span>
+                </button>
+              </div>
+            )}
+
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -183,12 +228,18 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
 
             {/* CTA Button */}
             <div className="hidden md:block">
-              <a
-                href="/payment"
+              <button
+                onClick={() => {
+                  if (session) {
+                    router.push("/survey");
+                  } else {
+                    router.push("/auth/signin");
+                  }
+                }}
                 className="px-6 py-2 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                Get Started
-              </a>
+                {session ? "Go to Assessment" : "Get Started"}
+              </button>
             </div>
 
             {/* Mobile Menu Button */}
@@ -274,14 +325,58 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
                 </div>
               ))}
 
+              {/* Mobile Auth Section */}
+              {session ? (
+                <div className="border-t border-gray-700 pt-4 px-4">
+                  <p
+                    className={`text-sm mb-2 ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    {session.user?.email}
+                  </p>
+                  <button
+                    onClick={() => signOut({ callbackUrl: "/" })}
+                    className={`w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg ${
+                      isDark
+                        ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="border-t border-gray-700 pt-4 px-4">
+                  <button
+                    onClick={() => router.push("/auth/signin")}
+                    className={`w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg ${
+                      isDark
+                        ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Sign In</span>
+                  </button>
+                </div>
+              )}
+
               {/* Mobile CTA */}
               <div className="px-4 pt-4">
-                <a
-                  href="/payment"
+                <button
+                  onClick={() => {
+                    if (session) {
+                      router.push("/survey");
+                    } else {
+                      router.push("/auth/signin");
+                    }
+                  }}
                   className="block w-full text-center px-6 py-3 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-teal-700 transition-all duration-200 shadow-lg"
                 >
-                  Get Started
-                </a>
+                  {session ? "Go to Assessment" : "Get Started"}
+                </button>
               </div>
             </div>
           </div>

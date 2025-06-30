@@ -10,11 +10,14 @@ export default withAuth(
   {
     callbacks: {
       authorized: ({ token, req }) => {
-        // Allow access to auth pages without token
-        if (req.nextUrl.pathname.startsWith("/auth")) {
+        // Allow access to auth pages and home page without token
+        if (
+          req.nextUrl.pathname === "/" ||
+          req.nextUrl.pathname.startsWith("/auth")
+        ) {
           return true;
         }
-        // Require token for all other pages
+        // Require token for all other protected pages
         return !!token;
       },
     },
@@ -25,12 +28,13 @@ export default withAuth(
   }
 );
 
-// Protect these routes
+// Protect these routes (exclude home page)
 export const config = {
   matcher: [
     "/survey/:path*",
     "/api/survey/:path*",
     "/dashboard/:path*",
     // Add other protected routes here
+    // Note: "/" is NOT included, so home page is public
   ],
 };
