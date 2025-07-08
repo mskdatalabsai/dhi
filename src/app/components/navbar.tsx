@@ -9,9 +9,7 @@ import {
   Moon,
   Menu,
   X,
-  ChevronDown,
   User,
-  BookOpen,
   Target,
   Phone,
   Home,
@@ -29,7 +27,6 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
   const { data: session } = useSession();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCoursesDropdownOpen, setIsCoursesDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -52,17 +49,6 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
       name: "About Us",
       href: "/about",
       icon: <User className="w-4 h-4" />,
-    },
-    {
-      name: "Courses",
-      href: "#",
-      icon: <BookOpen className="w-4 h-4" />,
-      dropdown: [
-        { name: "Data Science Foundations", href: "/courses/foundations" },
-        { name: "Complete Bootcamp", href: "/courses/bootcamp" },
-        { name: "AI & ML Mastery", href: "/courses/mastery" },
-        { name: "Corporate Training", href: "/courses/corporate" },
-      ],
     },
     {
       name: "Assessment",
@@ -109,63 +95,17 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
           <div className="hidden lg:flex items-center space-x-8">
             {navigationLinks.map((link, index) => (
               <div key={index} className="relative group">
-                {link.dropdown ? (
-                  <div className="relative">
-                    <button
-                      onClick={() =>
-                        setIsCoursesDropdownOpen(!isCoursesDropdownOpen)
-                      }
-                      className={`flex items-center space-x-1 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
-                        isDark
-                          ? "text-gray-300 hover:text-white hover:bg-gray-800"
-                          : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                      }`}
-                    >
-                      {link.icon}
-                      <span>{link.name}</span>
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-
-                    {/* Dropdown Menu */}
-                    {isCoursesDropdownOpen && (
-                      <div
-                        className={`absolute top-full left-0 mt-2 w-56 rounded-xl shadow-xl border transition-all duration-200 ${
-                          isDark
-                            ? "bg-gray-800 border-gray-700"
-                            : "bg-white border-gray-200"
-                        }`}
-                      >
-                        <div className="py-2">
-                          {link.dropdown.map((item, idx) => (
-                            <a
-                              key={idx}
-                              href={item.href}
-                              className={`block px-4 py-3 text-sm transition-colors ${
-                                isDark
-                                  ? "text-gray-300 hover:text-white hover:bg-gray-700"
-                                  : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                              }`}
-                            >
-                              {item.name}
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <a
-                    href={link.href}
-                    className={`flex items-center space-x-1 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
-                      isDark
-                        ? "text-gray-300 hover:text-white hover:bg-gray-800"
-                        : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                    }`}
-                  >
-                    {link.icon}
-                    <span>{link.name}</span>
-                  </a>
-                )}
+                <a
+                  href={link.href}
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
+                    isDark
+                      ? "text-gray-300 hover:text-white hover:bg-gray-800"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
+                >
+                  {link.icon}
+                  <span>{link.name}</span>
+                </a>
               </div>
             ))}
           </div>
@@ -231,14 +171,14 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
               <button
                 onClick={() => {
                   if (session) {
-                    router.push("/survey");
+                    router.push("/payment");
                   } else {
                     router.push("/auth/signin");
                   }
                 }}
                 className="px-6 py-2 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                {session ? "Go to Assessment" : "Get Started"}
+                Get Started
               </button>
             </div>
 
@@ -272,56 +212,17 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
             <div className="py-4 space-y-2">
               {navigationLinks.map((link, index) => (
                 <div key={index}>
-                  {link.dropdown ? (
-                    <div>
-                      <button
-                        onClick={() =>
-                          setIsCoursesDropdownOpen(!isCoursesDropdownOpen)
-                        }
-                        className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-medium transition-all ${
-                          isDark
-                            ? "text-gray-300 hover:text-white hover:bg-gray-800"
-                            : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                        }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          {link.icon}
-                          <span>{link.name}</span>
-                        </div>
-                        <ChevronDown className="w-4 h-4" />
-                      </button>
-
-                      {isCoursesDropdownOpen && (
-                        <div className="ml-8 mt-2 space-y-1">
-                          {link.dropdown.map((item, idx) => (
-                            <a
-                              key={idx}
-                              href={item.href}
-                              className={`block px-4 py-2 text-sm rounded-lg transition-colors ${
-                                isDark
-                                  ? "text-gray-400 hover:text-white hover:bg-gray-800"
-                                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                              }`}
-                            >
-                              {item.name}
-                            </a>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <a
-                      href={link.href}
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-all ${
-                        isDark
-                          ? "text-gray-300 hover:text-white hover:bg-gray-800"
-                          : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                      }`}
-                    >
-                      {link.icon}
-                      <span>{link.name}</span>
-                    </a>
-                  )}
+                  <a
+                    href={link.href}
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-all ${
+                      isDark
+                        ? "text-gray-300 hover:text-white hover:bg-gray-800"
+                        : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                    }`}
+                  >
+                    {link.icon}
+                    <span>{link.name}</span>
+                  </a>
                 </div>
               ))}
 
@@ -368,14 +269,14 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
                 <button
                   onClick={() => {
                     if (session) {
-                      router.push("/survey");
+                      router.push("/payment");
                     } else {
                       router.push("/auth/signin");
                     }
                   }}
                   className="block w-full text-center px-6 py-3 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-teal-700 transition-all duration-200 shadow-lg"
                 >
-                  {session ? "Go to Assessment" : "Get Started"}
+                  Get Started
                 </button>
               </div>
             </div>

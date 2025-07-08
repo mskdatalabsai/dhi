@@ -55,7 +55,28 @@ export default function SignUpPage() {
         }),
       });
 
-      const data = await response.json();
+      // Debug: Log response details
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+
+      // Get the response text first to check what we're receiving
+      const responseText = await response.text();
+      console.log("Response text:", responseText);
+
+      // Try to parse as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("Failed to parse response as JSON:", parseError);
+        console.error(
+          "Received HTML/text instead:",
+          responseText.substring(0, 200)
+        );
+        throw new Error(
+          "Server returned an invalid response. Check if the API route exists."
+        );
+      }
 
       if (!response.ok) {
         throw new Error(data.message || "Something went wrong");
@@ -71,9 +92,10 @@ export default function SignUpPage() {
       if (result?.error) {
         setError(result.error);
       } else {
-        router.push("/survey");
+        router.push("/");
       }
     } catch (error: any) {
+      console.error("Signup error:", error);
       setError(error.message || "Failed to create account");
     } finally {
       setIsLoading(false);

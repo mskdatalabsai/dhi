@@ -28,7 +28,7 @@ export default function SignInPage() {
       if (result?.error) {
         setError(result.error);
       } else {
-        router.push("/survey");
+        router.push("/");
       }
     } catch {
       setError("An unexpected error occurred");
@@ -39,7 +39,7 @@ export default function SignInPage() {
 
   const handleOAuthSignIn = (provider: string) => {
     setIsLoading(true);
-    signIn(provider, { callbackUrl: "/survey" });
+    signIn(provider, { callbackUrl: "/" });
   };
 
   return (

@@ -1,11 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/auth/signup/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-
-// This is a mock implementation - replace with your actual database
-// In production, use a proper database like Prisma with PostgreSQL, MongoDB, etc.
-const users: any[] = [];
+import { firestoreDb } from "../../../lib/firebase/db-service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,8 +14,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
-    const existingUser = users.find((u) => u.email === email);
+    // Check if user already exists in Firebase
+    const existingUser = await firestoreDb.users.exists(email);
     if (existingUser) {
       return NextResponse.json(
         { message: "User already exists" },
@@ -29,30 +24,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await firestoreDb.users.hashPassword(password);
 
-    // Create user
-    const newUser = {
-      id: Date.now().toString(),
+    // Create user in Firebase Firestore
+    const newUser = await firestoreDb.users.create({
       name,
       email,
       password: hashedPassword,
       role: "user",
-      createdAt: new Date().toISOString(),
-    };
-
-    // Save to database (mock implementation)
-    users.push(newUser);
-
-    // In production, save to your actual database
-    // Example with Prisma:
-    // const user = await prisma.user.create({
-    //   data: {
-    //     name,
-    //     email,
-    //     password: hashedPassword,
-    //   },
-    // });
+    });
 
     // Return success (don't send password back)
     return NextResponse.json(

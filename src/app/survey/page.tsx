@@ -1,6 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import SurveyHeader from "../components/SurveyHeader";
 import SurveyProgress from "../components/SurveyProgress";
@@ -15,10 +18,27 @@ import quizData from "./questions.json";
 import { QuizQuestion, SurveyQuestion } from "../types/quiz";
 import { transformQuizToSurvey } from "../utils/transformQuestions";
 
+interface DetailedQuestion {
+  questionId: string;
+  questionNumber: number;
+  question: string;
+  category: string;
+  level: string;
+  options: string[];
+  correctAnswer: string;
+  userAnswer: string | null;
+  isCorrect: boolean;
+  timeSpent: number;
+  answeredAt: Date | null;
+  wasChanged: boolean;
+}
+
 const SurveyPage = () => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [isDark, setIsDark] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<{ [key: number]: unknown }>({});
+  const [answers, setAnswers] = useState<{ [key: number]: number }>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -31,6 +51,14 @@ const SurveyPage = () => {
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
   const [instructionsAccepted, setInstructionsAccepted] = useState(false);
+  const [hasProfile, setHasProfile] = useState(false);
+  const [surveyStartTime, setSurveyStartTime] = useState<Date | null>(null);
+  const [answerChanges, setAnswerChanges] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const [detailedQuestions, setDetailedQuestions] = useState<
+    DetailedQuestion[]
+  >([]);
 
   // New states for quiz functionality
   const [score, setScore] = useState(0);
@@ -38,6 +66,17 @@ const SurveyPage = () => {
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) setIsDark(savedTheme === "dark");
+
+    // Check authentication
+    if (status === "unauthenticated") {
+      router.push("/auth/signin");
+      return;
+    }
+
+    if (status === "authenticated") {
+      // Check if user has completed profile
+      checkUserProfile();
+    }
 
     // Transform and load questions
     const transformedQuestions = transformQuizToSurvey(
@@ -55,20 +94,31 @@ const SurveyPage = () => {
     // });
     // setQuestions(selectedQuestions);
 
-    // Option 3: Filter by role
-    // const roleQuestions = filterQuestionsByRole(
-    //   transformedQuestions,
-    //   "Software Engineer / Developer"
-    // );
-    // setQuestions(roleQuestions);
-
     setIsLoading(false);
-  }, []);
+  }, [status, router]);
+
+  const checkUserProfile = async () => {
+    try {
+      const response = await fetch("/api/profile");
+      const data = await response.json();
+
+      if (!data.profile) {
+        // No profile exists, redirect to profile page
+        alert("Please complete your profile first");
+        router.push("/profile");
+      } else {
+        setHasProfile(true);
+      }
+    } catch (error) {
+      console.error("Error checking profile:", error);
+    }
+  };
 
   const handleInstructionsAccepted = () => {
     setInstructionsAccepted(true);
     setTimerActive(true);
     setQuestionStartTime(Date.now());
+    setSurveyStartTime(new Date());
   };
 
   const toggleTheme = () => {
@@ -98,6 +148,35 @@ const SurveyPage = () => {
     return "bg-purple-500";
   };
 
+  const prepareDetailedQuestions = useCallback(() => {
+    const detailed: DetailedQuestion[] = questions.map((question, index) => {
+      const userAnswerIndex = answers[question.id];
+      const userAnswer =
+        typeof userAnswerIndex === "number"
+          ? String.fromCharCode(97 + userAnswerIndex) // Convert 0->a, 1->b, etc.
+          : null;
+
+      const isCorrect = userAnswer === question.correctAnswer;
+
+      return {
+        questionId: `q_${question.id}`,
+        questionNumber: index + 1,
+        question: question.question,
+        category: question.category || "General",
+        level: question.level || "medium",
+        options: question.options || [],
+        correctAnswer: question.correctAnswer || "",
+        userAnswer,
+        isCorrect,
+        timeSpent: timeSpent[index] || 0,
+        answeredAt: userAnswer ? new Date() : null,
+        wasChanged: answerChanges[question.id] || false,
+      };
+    });
+
+    return detailed;
+  }, [questions, answers, timeSpent, answerChanges]);
+
   const calculateScore = useCallback(() => {
     let correctAnswers = 0;
     questions.forEach((question) => {
@@ -125,12 +204,15 @@ const SurveyPage = () => {
     }));
 
     const errors: { [key: number]: boolean } = {};
+    let skippedCount = 0;
+
     questions.forEach((question) => {
       if (question.required) {
         const answer = answers[question.id];
         const isValid = answer !== null && answer !== undefined;
         if (!isValid) {
           errors[question.id] = true;
+          skippedCount++;
         }
       }
     });
@@ -149,28 +231,57 @@ const SurveyPage = () => {
       const finalScore = calculateScore();
       setScore(finalScore);
 
+      // Prepare detailed questions data
+      const detailedQuestionsData = prepareDetailedQuestions();
+      setDetailedQuestions(detailedQuestionsData);
+
+      const questionsAttempted = Object.keys(answers).length;
+
       const surveyData = {
-        userId: "user_" + Date.now(),
-        timestamp: new Date().toISOString(),
+        // Basic info
+        startedAt: surveyStartTime,
         answers,
         timeSpent,
         totalTimeUsed: 3600 - totalTimeLeft,
-        completedAt: new Date().toISOString(),
         score: finalScore,
         totalQuestions: questions.length,
+        questionsAttempted,
+        skippedQuestions: questions.length - questionsAttempted,
         percentage: Math.round((finalScore / questions.length) * 100),
+
+        // Detailed questions with all info
+        questions: detailedQuestionsData,
+
+        // Additional metadata
         questionsByLevel: {
           easy: questions.filter((q) => q.level === "easy").length,
           medium: questions.filter((q) => q.level === "medium").length,
           advanced: questions.filter((q) => q.level === "advanced").length,
         },
+
+        // Timezone for metadata
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
 
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      console.log("Survey submitted:", surveyData);
-      setShowSuccess(true);
+      // Save to Firebase
+      const response = await fetch("/api/survey", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(surveyData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log("Survey submitted successfully:", result);
+        setShowSuccess(true);
+      } else {
+        throw new Error(result.error || "Failed to save survey results");
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Error submitting survey:", error);
       alert("Error submitting survey. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -183,6 +294,8 @@ const SurveyPage = () => {
     timeSpent,
     totalTimeLeft,
     calculateScore,
+    surveyStartTime,
+    prepareDetailedQuestions,
   ]);
 
   const handleTimeUp = useCallback(() => {
@@ -227,6 +340,19 @@ const SurveyPage = () => {
     return isValid;
   };
 
+  const handleAnswerChange = (questionId: number, value: number) => {
+    // Track if answer was changed
+    if (answers[questionId] !== undefined && answers[questionId] !== value) {
+      setAnswerChanges((prev) => ({ ...prev, [questionId]: true }));
+    }
+
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
+
+    if (validationErrors[questionId]) {
+      setValidationErrors((prev) => ({ ...prev, [questionId]: false }));
+    }
+  };
+
   const nextQuestion = () => {
     if (validateCurrentQuestion()) {
       const timeSpentOnQuestion = Math.floor(
@@ -251,8 +377,18 @@ const SurveyPage = () => {
     setCurrentQuestion((prev) => Math.max(prev - 1, 0));
   };
 
-  if (isLoading)
+  // Show loading or redirect if not authenticated
+  if (status === "loading" || isLoading) {
     return <LoadingScreen isDark={isDark} toggleTheme={toggleTheme} />;
+  }
+
+  if (status === "unauthenticated") {
+    return null; // Will redirect in useEffect
+  }
+
+  if (!hasProfile) {
+    return <LoadingScreen isDark={isDark} toggleTheme={toggleTheme} />;
+  }
 
   // Update SuccessScreen to show score if needed
   if (showSuccess) {
@@ -260,7 +396,6 @@ const SurveyPage = () => {
       <SuccessScreen
         isDark={isDark}
         toggleTheme={toggleTheme}
-        // Pass score data if your SuccessScreen supports it
         score={score}
         totalQuestions={questions.length}
         percentage={Math.round((score / questions.length) * 100)}
@@ -309,39 +444,23 @@ const SurveyPage = () => {
           getProgressBarColor={getProgressBarColor}
         />
 
-        {/* Add difficulty indicator */}
-        {/* {currentQ?.level && (
+        {/* User info */}
+        {session?.user && (
           <div
-            className={`text-sm mb-2 ${
-              isDark ? "text-gray-400" : "text-gray-600"
+            className={`text-xs mb-2 ${
+              isDark ? "text-gray-500" : "text-gray-500"
             }`}
           >
-            Difficulty:{" "}
-            <span
-              className={`font-semibold ${
-                currentQ.level === "easy"
-                  ? "text-green-500"
-                  : currentQ.level === "medium"
-                  ? "text-yellow-500"
-                  : "text-red-500"
-              }`}
-            >
-              {currentQ.level.charAt(0).toUpperCase() + currentQ.level.slice(1)}
-            </span>
+            Taking assessment as: {session.user.email}
           </div>
-        )} */}
+        )}
 
         <QuestionCard
           question={currentQ}
           answer={answers[currentQ.id]}
           isDark={isDark}
           hasError={validationErrors[currentQ.id]}
-          onAnswerChange={(questionId, value) => {
-            setAnswers((prev) => ({ ...prev, [questionId]: value }));
-            if (validationErrors[questionId]) {
-              setValidationErrors((prev) => ({ ...prev, [questionId]: false }));
-            }
-          }}
+          onAnswerChange={handleAnswerChange}
         />
 
         <Navigation

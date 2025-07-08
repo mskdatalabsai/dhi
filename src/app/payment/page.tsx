@@ -130,7 +130,7 @@ const PaymentPage = () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       alert("Payment successful! Redirecting to assessment...");
-      window.location.href = "/survey";
+      window.location.href = "/profile";
     } catch (error) {
       console.error("Error processing successful payment:", error);
       alert(
