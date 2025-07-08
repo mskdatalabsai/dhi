@@ -38,12 +38,10 @@ const ProfileComponent = () => {
       setIsDark(savedTheme === "dark");
     }
 
-    // Redirect if not authenticated
     if (status === "unauthenticated") {
       router.push("/auth/signin");
     }
 
-    // Load existing profile if available
     if (status === "authenticated") {
       loadProfile();
     }
@@ -52,8 +50,9 @@ const ProfileComponent = () => {
   const loadProfile = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/profile");
-      const data = await response.json();
+      const response = await fetch("/api/admin/profiles");
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : {};
 
       if (data.profile) {
         setFormData({
@@ -150,7 +149,6 @@ const ProfileComponent = () => {
       [name]: value,
     }));
 
-    // Clear error when user makes a selection
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -161,7 +159,6 @@ const ProfileComponent = () => {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-
     if (!formData.age_group) newErrors.age_group = "Age group is required";
     if (!formData.education)
       newErrors.education = "Education level is required";
@@ -171,7 +168,6 @@ const ProfileComponent = () => {
     if (!formData.functional_area)
       newErrors.functional_area = "Functional area is required";
     if (!formData.roles) newErrors.roles = "Role selection is required";
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -181,7 +177,7 @@ const ProfileComponent = () => {
 
     try {
       setIsSaving(true);
-      const response = await fetch("/api/profile", {
+      const response = await fetch("/api/admin/profiles", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -189,11 +185,11 @@ const ProfileComponent = () => {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : {};
 
       if (response.ok) {
         alert("Profile saved successfully!");
-        // Redirect to survey page
         router.push("/survey");
       } else {
         alert(data.error || "Failed to save profile");
@@ -263,7 +259,6 @@ const ProfileComponent = () => {
     </div>
   );
 
-  // Show loading state while checking authentication
   if (status === "loading" || isLoading) {
     return (
       <div
@@ -281,10 +276,7 @@ const ProfileComponent = () => {
     );
   }
 
-  // Redirect if not authenticated
-  if (status === "unauthenticated") {
-    return null;
-  }
+  if (status === "unauthenticated") return null;
 
   return (
     <div

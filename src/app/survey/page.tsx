@@ -99,7 +99,7 @@ const SurveyPage = () => {
 
   const checkUserProfile = async () => {
     try {
-      const response = await fetch("/api/profile");
+      const response = await fetch("/api/admin/profiles");
       const data = await response.json();
 
       if (!data.profile) {
@@ -264,7 +264,7 @@ const SurveyPage = () => {
       };
 
       // Save to Firebase
-      const response = await fetch("/api/survey", {
+      const response = await fetch("/api/admin/surveys", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
