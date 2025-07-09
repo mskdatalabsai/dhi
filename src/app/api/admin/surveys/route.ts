@@ -1,226 +1,156 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// app/api/survey/route.ts
+// app/api/admin/surveys/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../lib/auth";
 import adminDb from "../../../lib/firebase/admin";
-import { firestoreDb } from "../../../lib/firebase/db-service";
 import { Session } from "next-auth";
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const session = (await getServerSession(authOptions)) as Session;
-    if (!session || !session.user) {
+
+    // Check if user is admin
+    if (!session || !session.user || (session.user as any).role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const surveyData = await request.json();
+    const searchParams = request.nextUrl.searchParams;
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const userId = searchParams.get("userId");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
 
-    const profileSnapshot = await firestoreDb.profiles.getByUserId(
-      (session.user as any).id
-    );
+    let query = adminDb
+      .collection("surveyResults")
+      .orderBy("submittedAt", "desc");
 
-    const performanceByLevel: any = {};
-    const performanceByCategory: any = {};
-
-    if (surveyData.questions && Array.isArray(surveyData.questions)) {
-      ["easy", "medium", "advanced"].forEach((level) => {
-        const levelQuestions = surveyData.questions.filter(
-          (q: any) => q.level === level
-        );
-        const correctCount = levelQuestions.filter(
-          (q: any) => q.isCorrect
-        ).length;
-
-        performanceByLevel[level] = {
-          total: levelQuestions.length,
-          correct: correctCount,
-          percentage:
-            levelQuestions.length > 0
-              ? Math.round((correctCount / levelQuestions.length) * 100)
-              : 0,
-        };
-      });
-
-      const rawCategories = new Set(
-        surveyData.questions.map((q: any) => q.category)
-      );
-      const categories = Array.from(rawCategories).filter(
-        (c): c is string => typeof c === "string"
-      );
-
-      categories.forEach((category) => {
-        const categoryQuestions = surveyData.questions.filter(
-          (q: any) => q.category === category
-        );
-        const correctCount = categoryQuestions.filter(
-          (q: any) => q.isCorrect
-        ).length;
-
-        performanceByCategory[category] = {
-          total: categoryQuestions.length,
-          correct: correctCount,
-          percentage: Math.round(
-            (correctCount / categoryQuestions.length) * 100
-          ),
-        };
-      });
+    // Filter by userId if provided
+    if (userId) {
+      query = query.where("userId", "==", userId);
     }
 
-    const surveyResult = {
-      userId: (session.user as any).id,
-      email: session.user.email,
-      userName: session.user.name || "Unknown",
-      profileId: profileSnapshot?.id || null,
+    // Filter by date range if provided
+    if (startDate) {
+      query = query.where("submittedAt", ">=", new Date(startDate));
+    }
+    if (endDate) {
+      query = query.where("submittedAt", "<=", new Date(endDate));
+    }
 
-      surveyId: `survey_${Date.now()}`,
-      surveyVersion: "v1.0",
-      surveyType: "technical_assessment",
+    const surveysSnapshot = await query.limit(limit).get();
 
-      startedAt: surveyData.startedAt || new Date(),
-      completedAt: new Date(),
-      totalTimeUsed: surveyData.totalTimeUsed || 0,
+    const surveys = surveysSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        userId: data.userId,
+        userEmail: data.email,
+        userName: data.userName,
+        score: data.score,
+        percentage: data.percentage,
+        totalQuestions: data.totalQuestions,
+        questionsAttempted: data.questionsAttempted,
+        correctAnswers: data.correctAnswers,
+        totalTimeUsed: data.totalTimeUsed,
+        performanceByLevel: data.performanceByLevel,
+        performanceByCategory: data.performanceByCategory,
+        profileSnapshot: data.profileSnapshot,
+        submittedAt: data.submittedAt?.toDate?.() || data.submittedAt,
+        completedAt: data.completedAt?.toDate?.() || data.completedAt,
+      };
+    });
 
-      totalQuestions: surveyData.totalQuestions,
-      questionsAttempted:
-        surveyData.questionsAttempted || surveyData.totalQuestions,
-      correctAnswers: surveyData.score,
-      incorrectAnswers: surveyData.totalQuestions - surveyData.score,
-      skippedQuestions: surveyData.skippedQuestions || 0,
-      score: surveyData.score,
-      percentage: surveyData.percentage,
+    // Get total count
+    const totalSnapshot = await adminDb
+      .collection("surveyResults")
+      .count()
+      .get();
+    const total = totalSnapshot.data().count;
 
-      performanceByLevel,
-      performanceByCategory,
-
-      questions: surveyData.questions || [],
-
-      profileSnapshot: profileSnapshot
-        ? {
-            age_group: profileSnapshot.age_group,
-            education: profileSnapshot.education,
-            experience: profileSnapshot.experience,
-            purpose: profileSnapshot.purpose,
-            functional_area: profileSnapshot.functional_area,
-            roles: profileSnapshot.roles,
-          }
-        : null,
-
-      metadata: {
-        userAgent: request.headers.get("user-agent") || "Unknown",
-        platform: "Web",
-        timezone:
-          surveyData.timezone ||
-          Intl.DateTimeFormat().resolvedOptions().timeZone,
-      },
-
-      timeSpent: surveyData.timeSpent || {},
-      answers: surveyData.answers || {},
-
-      submittedAt: new Date(),
+    // Calculate summary statistics
+    const stats = {
+      totalSurveys: total,
+      averageScore:
+        surveys.length > 0
+          ? Math.round(
+              surveys.reduce((sum, s) => sum + s.percentage, 0) / surveys.length
+            )
+          : 0,
+      averageTimeUsed:
+        surveys.length > 0
+          ? Math.round(
+              surveys.reduce((sum, s) => sum + (s.totalTimeUsed || 0), 0) /
+                surveys.length
+            )
+          : 0,
+      completionRate:
+        surveys.length > 0
+          ? Math.round(
+              (surveys.filter((s) => s.questionsAttempted === s.totalQuestions)
+                .length /
+                surveys.length) *
+                100
+            )
+          : 0,
     };
 
-    const docRef = await adminDb.collection("surveyResults").add(surveyResult);
-
-    const userRef = adminDb.collection("users").doc((session.user as any).id);
-    const userDoc = await userRef.get();
-
-    if (userDoc.exists) {
-      const userData = userDoc.data();
-      const existingSurveys = userData?.totalSurveysTaken || 0;
-      const existingScores = userData?.allScores || [];
-
-      const allScores = [...existingScores, surveyData.percentage];
-      const averageScore = Math.round(
-        allScores.reduce((a: number, b: number) => a + b, 0) / allScores.length
-      );
-      const highestScore = Math.max(...allScores);
-      const lowestScore = Math.min(...allScores);
-
-      await userRef.update({
-        totalSurveysTaken: existingSurveys + 1,
-        latestSurveyId: docRef.id,
-        latestSurveyScore: surveyData.score,
-        latestSurveyPercentage: surveyData.percentage,
-        lastSurveyDate: new Date(),
-        averageScore,
-        highestScore,
-        lowestScore,
-        allScores,
-        updatedAt: new Date(),
-      });
-    }
-
     return NextResponse.json({
-      success: true,
-      surveyId: docRef.id,
-      message: "Survey results saved successfully",
-      score: surveyData.score,
-      percentage: surveyData.percentage,
-      performanceByLevel,
-      performanceByCategory,
+      surveys,
+      total,
+      stats,
     });
   } catch (error) {
-    console.error("Error saving survey results:", error);
+    console.error("Error fetching surveys:", error);
     return NextResponse.json(
-      { error: "Failed to save survey results" },
+      { error: "Failed to fetch surveys" },
       { status: 500 }
     );
   }
 }
 
-export async function GET(request: NextRequest) {
+// Get survey details by ID
+export async function POST(request: NextRequest) {
   try {
     const session = (await getServerSession(authOptions)) as Session;
-    if (!session || !session.user) {
+
+    if (!session || !session.user || (session.user as any).role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const detailed = searchParams.get("detailed") === "true";
+    const { surveyId } = await request.json();
 
-    const surveysRef = adminDb.collection("surveyResults");
-    const surveysSnapshot = await surveysRef
-      .where("userId", "==", (session.user as any).id)
-      .orderBy("submittedAt", "desc")
-      .limit(limit)
+    if (!surveyId) {
+      return NextResponse.json(
+        { error: "Survey ID required" },
+        { status: 400 }
+      );
+    }
+
+    const surveyDoc = await adminDb
+      .collection("surveyResults")
+      .doc(surveyId)
       .get();
 
-    const surveys = surveysSnapshot.docs.map((doc) => {
-      const data = doc.data();
+    if (!surveyDoc.exists) {
+      return NextResponse.json({ error: "Survey not found" }, { status: 404 });
+    }
 
-      if (detailed) {
-        return {
-          id: doc.id,
-          ...data,
-          submittedAt: data.submittedAt?.toDate?.() || data.submittedAt,
-          startedAt: data.startedAt?.toDate?.() || data.startedAt,
-          completedAt: data.completedAt?.toDate?.() || data.completedAt,
-        };
-      } else {
-        return {
-          id: doc.id,
-          surveyId: data.surveyId,
-          score: data.score,
-          totalQuestions: data.totalQuestions,
-          percentage: data.percentage,
-          totalTimeUsed: data.totalTimeUsed,
-          submittedAt: data.submittedAt?.toDate?.() || data.submittedAt,
-          performanceByLevel: data.performanceByLevel,
-          questionsAttempted: data.questionsAttempted,
-        };
-      }
-    });
+    const data = surveyDoc.data();
 
     return NextResponse.json({
-      surveys,
-      total: surveys.length,
+      survey: {
+        id: surveyDoc.id,
+        ...data,
+        submittedAt: data?.submittedAt?.toDate?.() || data?.submittedAt,
+        completedAt: data?.completedAt?.toDate?.() || data?.completedAt,
+        startedAt: data?.startedAt?.toDate?.() || data?.startedAt,
+      },
     });
   } catch (error) {
-    console.error("Error fetching survey results:", error);
+    console.error("Error fetching survey details:", error);
     return NextResponse.json(
-      { error: "Failed to fetch survey results" },
+      { error: "Failed to fetch survey details" },
       { status: 500 }
     );
   }

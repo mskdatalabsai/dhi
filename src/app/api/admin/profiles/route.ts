@@ -1,105 +1,92 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// app/api/admin/profiles/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../lib/auth";
 import adminDb from "../../../lib/firebase/admin";
 import { Session } from "next-auth";
 
-export async function POST(request: NextRequest) {
-  try {
-    const session: Session | null = await getServerSession(authOptions);
-    if (!session || !session.user?.id || !session.user.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const profileData = await request.json();
-
-    const requiredFields = [
-      "age_group",
-      "education",
-      "experience",
-      "purpose",
-      "functional_area",
-      "roles",
-    ];
-
-    for (const field of requiredFields) {
-      if (!profileData[field]) {
-        return NextResponse.json(
-          { error: `Missing required field: ${field}` },
-          { status: 400 }
-        );
-      }
-    }
-
-    const profileDoc = {
-      userId: session.user.id,
-      email: session.user.email,
-      ...profileData,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    const profilesRef = adminDb.collection("profiles");
-    const existingProfile = await profilesRef
-      .where("userId", "==", session.user.id)
-      .limit(1)
-      .get();
-
-    let profileId;
-    if (!existingProfile.empty) {
-      profileId = existingProfile.docs[0].id;
-      await profilesRef.doc(profileId).update({
-        ...profileData,
-        updatedAt: new Date(),
-      });
-    } else {
-      const docRef = await profilesRef.add(profileDoc);
-      profileId = docRef.id;
-    }
-
-    return NextResponse.json({
-      success: true,
-      profileId,
-      message: "Profile saved successfully",
-    });
-  } catch (error) {
-    console.error("Error saving profile:", error);
-    return NextResponse.json(
-      { error: "Failed to save profile" },
-      { status: 500 }
-    );
-  }
-}
-
 export async function GET(request: NextRequest) {
   try {
-    const session: Session | null = await getServerSession(authOptions);
-    if (!session || !session.user?.id) {
+    const session = (await getServerSession(authOptions)) as Session;
+
+    // Check if user is admin
+    if (!session || !session.user || (session.user as any).role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const profilesRef = adminDb.collection("profiles");
-    const profileSnapshot = await profilesRef
-      .where("userId", "==", session.user.id)
-      .limit(1)
-      .get();
+    const searchParams = request.nextUrl.searchParams;
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const search = searchParams.get("search");
 
-    if (profileSnapshot.empty) {
-      return NextResponse.json({ profile: null });
-    }
+    const query = adminDb.collection("profiles").orderBy("createdAt", "desc");
 
-    const profile = {
-      id: profileSnapshot.docs[0].id,
-      ...profileSnapshot.docs[0].data(),
+    const profilesSnapshot = await query.limit(limit).get();
+
+    const profiles = profilesSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        userId: data.userId,
+        email: data.email,
+        age_group: data.age_group,
+        education: data.education,
+        experience: data.experience,
+        purpose: data.purpose,
+        functional_area: data.functional_area,
+        roles: data.roles,
+        createdAt: data.createdAt?.toDate?.() || data.createdAt,
+        updatedAt: data.updatedAt?.toDate?.() || data.updatedAt,
+      };
+    });
+
+    // Filter by search term if provided (client-side filtering for now)
+    const filteredProfiles = search
+      ? profiles.filter(
+          (p) =>
+            p.email?.toLowerCase().includes(search.toLowerCase()) ||
+            p.functional_area?.toLowerCase().includes(search.toLowerCase()) ||
+            p.roles?.toLowerCase().includes(search.toLowerCase())
+        )
+      : profiles;
+
+    // Get total count
+    const totalSnapshot = await adminDb.collection("profiles").count().get();
+    const total = totalSnapshot.data().count;
+
+    // Calculate profile statistics
+    const stats = {
+      totalProfiles: total,
+      byEducation: {} as Record<string, number>,
+      byExperience: {} as Record<string, number>,
+      byFunctionalArea: {} as Record<string, number>,
+      byAgeGroup: {} as Record<string, number>,
     };
 
-    return NextResponse.json({ profile });
+    // Group profiles by different categories
+    profiles.forEach((profile) => {
+      stats.byEducation[profile.education] =
+        (stats.byEducation[profile.education] || 0) + 1;
+
+      stats.byExperience[profile.experience] =
+        (stats.byExperience[profile.experience] || 0) + 1;
+
+      stats.byFunctionalArea[profile.functional_area] =
+        (stats.byFunctionalArea[profile.functional_area] || 0) + 1;
+
+      stats.byAgeGroup[profile.age_group] =
+        (stats.byAgeGroup[profile.age_group] || 0) + 1;
+    });
+
+    return NextResponse.json({
+      profiles: filteredProfiles,
+      total,
+      stats,
+    });
   } catch (error) {
-    console.error("Error fetching profile:", error);
+    console.error("Error fetching profiles:", error);
     return NextResponse.json(
-      { error: "Failed to fetch profile" },
+      { error: "Failed to fetch profiles" },
       { status: 500 }
     );
   }
