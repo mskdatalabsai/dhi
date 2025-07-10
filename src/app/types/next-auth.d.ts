@@ -1,20 +1,26 @@
-// types/next-auth.d.ts
+// types/next-auth.d.ts (create this file in your project root)
+
+import "next-auth";
 
 declare module "next-auth" {
-  interface User {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
-  }
-
   interface Session {
     user: {
       id: string;
       email: string;
-      name: string;
+      name?: string | null;
+      image?: string | null;
       role: string;
+      hasPaid?: boolean;
     };
+  }
+
+  interface User {
+    id: string;
+    email: string;
+    name?: string | null;
+    image?: string | null;
+    role: string;
+    hasPaid?: boolean;
   }
 }
 
@@ -22,7 +28,28 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     role: string;
-    email?: string; // Optional for OAuth users
-    name?: string; // Optional for OAuth users
+    hasPaid?: boolean;
+  }
+}
+declare module "next-auth/providers/credentials" {
+  interface Credentials {
+    email: string;
+    password: string;
+  }
+}
+declare module "next-auth/providers/google" {
+  interface GoogleProfile {
+    id: string;
+    email: string;
+    name?: string | null;
+    picture?: string | null;
+  }
+}
+declare module "next-auth/providers/github" {
+  interface GitHubProfile {
+    id: string;
+    email: string;
+    name?: string | null;
+    avatar_url?: string | null;
   }
 }

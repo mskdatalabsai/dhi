@@ -3,6 +3,7 @@
 import adminDb from "./admin";
 import bcrypt from "bcryptjs";
 
+// Updated User interface with payment properties
 export interface User {
   id?: string;
   email: string;
@@ -10,6 +11,24 @@ export interface User {
   name: string;
   role: string;
   provider?: string;
+  hasPaid?: boolean; // Payment status
+  paymentDate?: Date; // When payment was made
+  paymentId?: string; // Razorpay payment ID
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// New Payment interface
+export interface Payment {
+  id?: string;
+  userEmail: string;
+  userId: string;
+  paymentId: string; // Razorpay payment ID
+  orderId?: string; // Razorpay order ID
+  signature?: string; // Razorpay signature
+  amount: number;
+  currency: string;
+  status: "pending" | "completed" | "failed";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,6 +55,13 @@ export const firestoreDb = {
           name: data.name,
           role: data.role,
           provider: data.provider,
+          hasPaid: data.hasPaid,
+          paymentDate: data.paymentDate?.toDate
+            ? data.paymentDate.toDate()
+            : data.paymentDate
+            ? new Date(data.paymentDate)
+            : undefined,
+          paymentId: data.paymentId,
           createdAt: data.createdAt?.toDate
             ? data.createdAt.toDate()
             : new Date(data.createdAt),
@@ -62,6 +88,13 @@ export const firestoreDb = {
           name: data.name,
           role: data.role,
           provider: data.provider,
+          hasPaid: data.hasPaid,
+          paymentDate: data.paymentDate?.toDate
+            ? data.paymentDate.toDate()
+            : data.paymentDate
+            ? new Date(data.paymentDate)
+            : undefined,
+          paymentId: data.paymentId,
           createdAt: data.createdAt?.toDate
             ? data.createdAt.toDate()
             : new Date(data.createdAt),
@@ -158,6 +191,13 @@ export const firestoreDb = {
             name: data.name,
             role: data.role,
             provider: data.provider,
+            hasPaid: data.hasPaid,
+            paymentDate: data.paymentDate?.toDate
+              ? data.paymentDate.toDate()
+              : data.paymentDate
+              ? new Date(data.paymentDate)
+              : undefined,
+            paymentId: data.paymentId,
             createdAt: data.createdAt?.toDate
               ? data.createdAt.toDate()
               : new Date(data.createdAt),
@@ -168,6 +208,205 @@ export const firestoreDb = {
         });
       } catch (error) {
         console.error("Error getting all users:", error);
+        return [];
+      }
+    },
+
+    // New payment-related methods
+    markAsPaid: async (
+      userId: string,
+      paymentData: { paymentId: string }
+    ): Promise<void> => {
+      try {
+        await adminDb.collection("users").doc(userId).update({
+          hasPaid: true,
+          paymentDate: new Date(),
+          paymentId: paymentData.paymentId,
+          updatedAt: new Date(),
+        });
+      } catch (error) {
+        console.error("Error marking user as paid:", error);
+        throw new Error("Failed to mark user as paid");
+      }
+    },
+
+    checkPaymentStatus: async (userEmail: string): Promise<boolean> => {
+      try {
+        const user = await firestoreDb.users.findByEmail(userEmail);
+        return user?.hasPaid === true;
+      } catch (error) {
+        console.error("Error checking user payment status:", error);
+        return false;
+      }
+    },
+  },
+
+  // New payments collection
+  payments: {
+    create: async (
+      paymentData: Omit<Payment, "id" | "createdAt" | "updatedAt">
+    ): Promise<Payment> => {
+      try {
+        const now = new Date();
+        const newPayment = {
+          ...paymentData,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        const docRef = await adminDb.collection("payments").add(newPayment);
+
+        return {
+          id: docRef.id,
+          ...newPayment,
+        };
+      } catch (error) {
+        console.error("Error creating payment record:", error);
+        throw new Error("Failed to create payment record");
+      }
+    },
+
+    findByUserEmail: async (userEmail: string): Promise<Payment[]> => {
+      try {
+        const snapshot = await adminDb
+          .collection("payments")
+          .where("userEmail", "==", userEmail)
+          .orderBy("createdAt", "desc")
+          .get();
+
+        return snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            userEmail: data.userEmail,
+            userId: data.userId,
+            paymentId: data.paymentId,
+            orderId: data.orderId,
+            signature: data.signature,
+            amount: data.amount,
+            currency: data.currency,
+            status: data.status,
+            createdAt: data.createdAt?.toDate
+              ? data.createdAt.toDate()
+              : new Date(data.createdAt),
+            updatedAt: data.updatedAt?.toDate
+              ? data.updatedAt.toDate()
+              : new Date(data.updatedAt),
+          };
+        });
+      } catch (error) {
+        console.error("Error finding payments by user email:", error);
+        return [];
+      }
+    },
+
+    findByPaymentId: async (paymentId: string): Promise<Payment | null> => {
+      try {
+        const snapshot = await adminDb
+          .collection("payments")
+          .where("paymentId", "==", paymentId)
+          .limit(1)
+          .get();
+
+        if (snapshot.empty) return null;
+
+        const doc = snapshot.docs[0];
+        const data = doc.data();
+
+        return {
+          id: doc.id,
+          userEmail: data.userEmail,
+          userId: data.userId,
+          paymentId: data.paymentId,
+          orderId: data.orderId,
+          signature: data.signature,
+          amount: data.amount,
+          currency: data.currency,
+          status: data.status,
+          createdAt: data.createdAt?.toDate
+            ? data.createdAt.toDate()
+            : new Date(data.createdAt),
+          updatedAt: data.updatedAt?.toDate
+            ? data.updatedAt.toDate()
+            : new Date(data.updatedAt),
+        };
+      } catch (error) {
+        console.error("Error finding payment by payment ID:", error);
+        return null;
+      }
+    },
+
+    hasUserPaid: async (userEmail: string): Promise<boolean> => {
+      try {
+        // Check for completed payments
+        const snapshot = await adminDb
+          .collection("payments")
+          .where("userEmail", "==", userEmail)
+          .where("status", "==", "completed")
+          .limit(1)
+          .get();
+
+        return !snapshot.empty;
+      } catch (error) {
+        console.error("Error checking if user has paid:", error);
+        return false;
+      }
+    },
+
+    updateStatus: async (
+      paymentId: string,
+      status: Payment["status"]
+    ): Promise<void> => {
+      try {
+        const snapshot = await adminDb
+          .collection("payments")
+          .where("paymentId", "==", paymentId)
+          .limit(1)
+          .get();
+
+        if (!snapshot.empty) {
+          const docId = snapshot.docs[0].id;
+          await adminDb.collection("payments").doc(docId).update({
+            status,
+            updatedAt: new Date(),
+          });
+        }
+      } catch (error) {
+        console.error("Error updating payment status:", error);
+        throw new Error("Failed to update payment status");
+      }
+    },
+
+    getAll: async (limit: number = 100): Promise<Payment[]> => {
+      try {
+        const snapshot = await adminDb
+          .collection("payments")
+          .orderBy("createdAt", "desc")
+          .limit(limit)
+          .get();
+
+        return snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            userEmail: data.userEmail,
+            userId: data.userId,
+            paymentId: data.paymentId,
+            orderId: data.orderId,
+            signature: data.signature,
+            amount: data.amount,
+            currency: data.currency,
+            status: data.status,
+            createdAt: data.createdAt?.toDate
+              ? data.createdAt.toDate()
+              : new Date(data.createdAt),
+            updatedAt: data.updatedAt?.toDate
+              ? data.updatedAt.toDate()
+              : new Date(data.updatedAt),
+          };
+        });
+      } catch (error) {
+        console.error("Error getting all payments:", error);
         return [];
       }
     },

@@ -22,8 +22,9 @@ const ProfilePage = () => {
   const router = useRouter();
 
   const [isDark, setIsDark] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [hasPayment, setHasPayment] = useState(false);
   const [formData, setFormData] = useState({
     age_group: "",
     education: "",
@@ -38,14 +39,48 @@ const ProfilePage = () => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) setIsDark(savedTheme === "dark");
 
-    if (status === "unauthenticated") router.push("/auth/signin");
+    // Check authentication first
+    if (status === "unauthenticated") {
+      router.push("/auth/signin");
+      return;
+    }
 
-    if (status === "authenticated") loadProfile();
+    if (status === "authenticated") {
+      // Check payment status before loading profile
+      checkPaymentAndLoadProfile();
+    }
   }, [status, router]);
+
+  const checkPaymentAndLoadProfile = async () => {
+    try {
+      setIsLoading(true);
+
+      // First check if user has paid
+      const paymentResponse = await fetch("/api/payment/status");
+      const paymentData = await paymentResponse.json();
+
+      if (!paymentData.hasPaid) {
+        // User hasn't paid, redirect to payment page
+        alert(
+          "Please complete your payment first to access the profile setup."
+        );
+        router.push("/payment");
+        return;
+      }
+
+      setHasPayment(true);
+
+      // If payment is confirmed, load profile
+      await loadProfile();
+    } catch (error) {
+      console.error("Error checking payment status:", error);
+      // On error, redirect to payment to be safe
+      router.push("/payment");
+    }
+  };
 
   const loadProfile = async () => {
     try {
-      setIsLoading(true);
       const response = await fetch("/api/profile");
       const text = await response.text();
       const data = text ? JSON.parse(text) : {};
@@ -197,7 +232,8 @@ const ProfilePage = () => {
     return Math.round((filledFields / Object.keys(formData).length) * 100);
   };
 
-  if (status === "loading" || isLoading) {
+  // Show loading screen while checking authentication and payment
+  if (status === "loading" || isLoading || !hasPayment) {
     return (
       <div
         className={`min-h-screen flex items-center justify-center ${
@@ -225,13 +261,16 @@ const ProfilePage = () => {
             ></path>
           </svg>
           <p className={isDark ? "text-gray-300" : "text-gray-600"}>
-            Loading...
+            {status === "loading"
+              ? "Loading..."
+              : "Verifying payment status..."}
           </p>
         </div>
       </div>
     );
   }
 
+  // Don't render anything if unauthenticated (will redirect)
   if (status === "unauthenticated") return null;
 
   return (

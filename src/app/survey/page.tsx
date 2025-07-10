@@ -51,6 +51,7 @@ const SurveyPage = () => {
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
   const [instructionsAccepted, setInstructionsAccepted] = useState(false);
+  const [hasPayment, setHasPayment] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
   const [surveyStartTime, setSurveyStartTime] = useState<Date | null>(null);
   const [answerChanges, setAnswerChanges] = useState<{
@@ -67,35 +68,42 @@ const SurveyPage = () => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) setIsDark(savedTheme === "dark");
 
-    // Check authentication
+    // Check authentication first
     if (status === "unauthenticated") {
       router.push("/auth/signin");
       return;
     }
 
     if (status === "authenticated") {
-      // Check if user has completed profile
-      checkUserProfile();
+      // Check payment and profile status
+      checkPaymentProfileAndLoadQuestions();
     }
-
-    // Transform and load questions
-    const transformedQuestions = transformQuizToSurvey(
-      quizData as QuizQuestion[]
-    );
-
-    // Option 1: Use all questions
-    setQuestions(transformedQuestions);
-
-    // Option 2: Get random selection (e.g., 20 questions with difficulty distribution)
-    // const selectedQuestions = getRandomQuestions(transformedQuestions, 20, {
-    //   easyCount: 8,
-    //   mediumCount: 8,
-    //   advancedCount: 4
-    // });
-    // setQuestions(selectedQuestions);
-
-    setIsLoading(false);
   }, [status, router]);
+
+  const checkPaymentProfileAndLoadQuestions = async () => {
+    try {
+      setIsLoading(true);
+
+      // First check if user has paid
+      const paymentResponse = await fetch("/api/payment/status");
+      const paymentData = await paymentResponse.json();
+
+      if (!paymentData.hasPaid) {
+        alert("Please complete your payment first to access the assessment.");
+        router.push("/payment");
+        return;
+      }
+
+      setHasPayment(true);
+
+      // Then check if user has completed profile
+      await checkUserProfile();
+    } catch (error) {
+      console.error("Error checking prerequisites:", error);
+      // On error, redirect to payment to be safe
+      router.push("/payment");
+    }
+  };
 
   const checkUserProfile = async () => {
     try {
@@ -104,13 +112,46 @@ const SurveyPage = () => {
 
       if (!data.profile) {
         // No profile exists, redirect to profile page
-        alert("Please complete your profile first");
+        alert(
+          "Please complete your profile first before taking the assessment."
+        );
         router.push("/profile");
-      } else {
-        setHasProfile(true);
+        return;
       }
+
+      setHasProfile(true);
+
+      // Load questions after all checks pass
+      loadQuestions();
     } catch (error) {
       console.error("Error checking profile:", error);
+      router.push("/profile");
+    }
+  };
+
+  const loadQuestions = () => {
+    try {
+      // Transform and load questions
+      const transformedQuestions = transformQuizToSurvey(
+        quizData as QuizQuestion[]
+      );
+
+      // Option 1: Use all questions
+      setQuestions(transformedQuestions);
+
+      // Option 2: Get random selection (e.g., 20 questions with difficulty distribution)
+      // const selectedQuestions = getRandomQuestions(transformedQuestions, 20, {
+      //   easyCount: 8,
+      //   mediumCount: 8,
+      //   advancedCount: 4
+      // });
+      // setQuestions(selectedQuestions);
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error loading questions:", error);
+      alert("Error loading assessment questions. Please try again.");
+      router.push("/profile");
     }
   };
 
@@ -377,17 +418,14 @@ const SurveyPage = () => {
     setCurrentQuestion((prev) => Math.max(prev - 1, 0));
   };
 
-  // Show loading or redirect if not authenticated
-  if (status === "loading" || isLoading) {
+  // Show loading screen while checking authentication, payment, and profile
+  if (status === "loading" || isLoading || !hasPayment || !hasProfile) {
     return <LoadingScreen isDark={isDark} toggleTheme={toggleTheme} />;
   }
 
+  // Don't render anything if unauthenticated (will redirect)
   if (status === "unauthenticated") {
-    return null; // Will redirect in useEffect
-  }
-
-  if (!hasProfile) {
-    return <LoadingScreen isDark={isDark} toggleTheme={toggleTheme} />;
+    return null;
   }
 
   // Update SuccessScreen to show score if needed
