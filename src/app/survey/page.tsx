@@ -13,10 +13,9 @@ import SuccessScreen from "../components/SuccessScreen";
 import LoadingScreen from "../components/LoadingScreen";
 import InstructionsPopup from "../components/InstructionsPopup";
 
-// Import quiz data and utilities
-import quizData from "./questions.json";
-import { QuizQuestion, SurveyQuestion } from "../types/quiz";
-import { transformQuizToSurvey } from "../utils/transformQuestions";
+// Import types and services
+import { SurveyQuestion } from "../types/quiz";
+import { QuestionService } from "../services/questionService";
 
 interface DetailedQuestion {
   questionId: string;
@@ -63,6 +62,7 @@ const SurveyPage = () => {
 
   // New states for quiz functionality
   const [score, setScore] = useState(0);
+  const [questionsLoadError, setQuestionsLoadError] = useState<string>("");
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -75,7 +75,7 @@ const SurveyPage = () => {
     }
 
     if (status === "authenticated") {
-      // Check payment and profile status
+      // Check payment and profile status, then load questions
       checkPaymentProfileAndLoadQuestions();
     }
   }, [status, router]);
@@ -100,7 +100,6 @@ const SurveyPage = () => {
       await checkUserProfile();
     } catch (error) {
       console.error("Error checking prerequisites:", error);
-      // On error, redirect to payment to be safe
       router.push("/payment");
     }
   };
@@ -111,7 +110,6 @@ const SurveyPage = () => {
       const data = await response.json();
 
       if (!data.profile) {
-        // No profile exists, redirect to profile page
         alert(
           "Please complete your profile first before taking the assessment."
         );
@@ -122,36 +120,41 @@ const SurveyPage = () => {
       setHasProfile(true);
 
       // Load questions after all checks pass
-      loadQuestions();
+      await loadQuestionsFromFirestore();
     } catch (error) {
       console.error("Error checking profile:", error);
       router.push("/profile");
     }
   };
 
-  const loadQuestions = () => {
+  const loadQuestionsFromFirestore = async () => {
     try {
-      // Transform and load questions
-      const transformedQuestions = transformQuizToSurvey(
-        quizData as QuizQuestion[]
-      );
+      setIsLoading(true);
+      setQuestionsLoadError("");
 
-      // Option 1: Use all questions
-      setQuestions(transformedQuestions);
+      const caseInfo = QuestionService.getHardcodedCaseInfo();
+      console.log(`Loading questions for ${caseInfo.caseName}`);
 
-      // Option 2: Get random selection (e.g., 20 questions with difficulty distribution)
-      // const selectedQuestions = getRandomQuestions(transformedQuestions, 20, {
-      //   easyCount: 8,
-      //   mediumCount: 8,
-      //   advancedCount: 4
-      // });
-      // setQuestions(selectedQuestions);
+      // Use balanced questions for better distribution (20 easy, 25 medium, 15 advanced)
+      const surveyQuestions =
+        await QuestionService.getBalancedQuestionsForSurvey();
 
+      if (surveyQuestions.length === 0) {
+        throw new Error(`No questions found for ${caseInfo.caseName}`);
+      }
+
+      setQuestions(surveyQuestions);
       setIsLoading(false);
+
+      console.log(
+        `✅ Loaded ${surveyQuestions.length} questions from ${caseInfo.caseName}`
+      );
     } catch (error) {
-      console.error("Error loading questions:", error);
-      alert("Error loading assessment questions. Please try again.");
-      router.push("/profile");
+      console.error("Error loading questions from Firestore:", error);
+      setQuestionsLoadError(
+        error instanceof Error ? error.message : "Failed to load questions"
+      );
+      setIsLoading(false);
     }
   };
 
@@ -194,7 +197,7 @@ const SurveyPage = () => {
       const userAnswerIndex = answers[question.id];
       const userAnswer =
         typeof userAnswerIndex === "number"
-          ? String.fromCharCode(97 + userAnswerIndex) // Convert 0->a, 1->b, etc.
+          ? String.fromCharCode(97 + userAnswerIndex)
           : null;
 
       const isCorrect = userAnswer === question.correctAnswer;
@@ -223,9 +226,8 @@ const SurveyPage = () => {
     questions.forEach((question) => {
       if (question.correctAnswer) {
         const userAnswer = answers[question.id];
-        // Map the answer index to letter (0=a, 1=b, 2=c, 3=d)
         if (typeof userAnswer === "number" && question.options) {
-          const answerLetter = String.fromCharCode(97 + userAnswer); // 97 is 'a'
+          const answerLetter = String.fromCharCode(97 + userAnswer);
           if (answerLetter === question.correctAnswer) {
             correctAnswers++;
           }
@@ -272,14 +274,13 @@ const SurveyPage = () => {
       const finalScore = calculateScore();
       setScore(finalScore);
 
-      // Prepare detailed questions data
       const detailedQuestionsData = prepareDetailedQuestions();
       setDetailedQuestions(detailedQuestionsData);
 
       const questionsAttempted = Object.keys(answers).length;
+      const caseInfo = QuestionService.getHardcodedCaseInfo();
 
       const surveyData = {
-        // Basic info
         startedAt: surveyStartTime,
         answers,
         timeSpent,
@@ -289,22 +290,17 @@ const SurveyPage = () => {
         questionsAttempted,
         skippedQuestions: questions.length - questionsAttempted,
         percentage: Math.round((finalScore / questions.length) * 100),
-
-        // Detailed questions with all info
         questions: detailedQuestionsData,
-
-        // Additional metadata
+        selectedCaseId: caseInfo.caseId,
+        caseName: caseInfo.caseName,
         questionsByLevel: {
           easy: questions.filter((q) => q.level === "easy").length,
           medium: questions.filter((q) => q.level === "medium").length,
           advanced: questions.filter((q) => q.level === "advanced").length,
         },
-
-        // Timezone for metadata
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
 
-      // Save to Firebase
       const response = await fetch("/api/survey", {
         method: "POST",
         headers: {
@@ -382,7 +378,6 @@ const SurveyPage = () => {
   };
 
   const handleAnswerChange = (questionId: number, value: number) => {
-    // Track if answer was changed
     if (answers[questionId] !== undefined && answers[questionId] !== value) {
       setAnswerChanges((prev) => ({ ...prev, [questionId]: true }));
     }
@@ -419,7 +414,7 @@ const SurveyPage = () => {
   };
 
   // Show loading screen while checking authentication, payment, and profile
-  if (status === "loading" || isLoading || !hasPayment || !hasProfile) {
+  if (status === "loading" || isLoading) {
     return <LoadingScreen isDark={isDark} toggleTheme={toggleTheme} />;
   }
 
@@ -428,7 +423,40 @@ const SurveyPage = () => {
     return null;
   }
 
-  // Update SuccessScreen to show score if needed
+  // Show error if questions failed to load
+  if (questionsLoadError) {
+    return (
+      <div
+        className={`min-h-screen flex flex-col ${
+          isDark ? "bg-gray-900" : "bg-gray-50"
+        }`}
+      >
+        <Navbar isDark={isDark} toggleTheme={toggleTheme} />
+        <div className="flex-1 flex items-center justify-center px-6 py-4">
+          <div className="max-w-md w-full text-center">
+            <div
+              className={`p-6 rounded-lg border border-red-300 ${
+                isDark ? "bg-red-900/20 text-red-400" : "bg-red-50 text-red-700"
+              }`}
+            >
+              <h2 className="text-xl font-semibold mb-4">
+                Failed to Load Questions
+              </h2>
+              <p className="text-sm mb-4">{questionsLoadError}</p>
+              <button
+                onClick={() => loadQuestionsFromFirestore()}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show success screen
   if (showSuccess) {
     return (
       <SuccessScreen
@@ -441,7 +469,8 @@ const SurveyPage = () => {
     );
   }
 
-  if (!instructionsAccepted) {
+  // Show instructions popup
+  if (!instructionsAccepted && questions.length > 0) {
     return (
       <div
         className={`h-screen overflow-hidden flex flex-col ${
@@ -457,75 +486,81 @@ const SurveyPage = () => {
     );
   }
 
-  const currentQ = questions[currentQuestion];
+  // Main survey interface
+  if (questions.length > 0) {
+    const currentQ = questions[currentQuestion];
+    const caseInfo = QuestionService.getHardcodedCaseInfo();
 
-  return (
-    <div
-      className={`h-screen overflow-hidden flex flex-col ${
-        isDark ? "bg-gray-900" : "bg-gray-50"
-      }`}
-    >
-      <Navbar isDark={isDark} toggleTheme={toggleTheme} />
-      <div className="flex-1 flex flex-col px-6 py-4 max-w-5xl mx-auto w-full pt-20">
-        <SurveyHeader
-          isDark={isDark}
-          totalTimeLeft={totalTimeLeft}
-          formatTime={formatTime}
-          getTimerColor={getTimerColor}
-        />
+    return (
+      <div
+        className={`h-screen overflow-hidden flex flex-col ${
+          isDark ? "bg-gray-900" : "bg-gray-50"
+        }`}
+      >
+        <Navbar isDark={isDark} toggleTheme={toggleTheme} />
+        <div className="flex-1 flex flex-col px-6 py-4 max-w-5xl mx-auto w-full pt-20">
+          <SurveyHeader
+            isDark={isDark}
+            totalTimeLeft={totalTimeLeft}
+            formatTime={formatTime}
+            getTimerColor={getTimerColor}
+          />
 
-        <SurveyProgress
-          isDark={isDark}
-          currentQuestion={currentQuestion}
-          totalQuestions={questions.length}
-          totalTimeLeft={totalTimeLeft}
-          getProgressBarColor={getProgressBarColor}
-        />
+          <SurveyProgress
+            isDark={isDark}
+            currentQuestion={currentQuestion}
+            totalQuestions={questions.length}
+            totalTimeLeft={totalTimeLeft}
+            getProgressBarColor={getProgressBarColor}
+          />
 
-        {/* User info */}
-        {session?.user && (
+          {/* Case info and user info */}
           <div
-            className={`text-xs mb-2 ${
+            className={`text-xs mb-2 flex justify-between ${
               isDark ? "text-gray-500" : "text-gray-500"
             }`}
           >
-            Taking assessment as: {session.user.email}
+            <span>Assessment: {caseInfo.caseName} (60 questions)</span>
+            {session?.user && <span>Taking as: {session.user.email}</span>}
           </div>
-        )}
 
-        <QuestionCard
-          question={currentQ}
-          answer={answers[currentQ.id]}
-          isDark={isDark}
-          hasError={validationErrors[currentQ.id]}
-          onAnswerChange={handleAnswerChange}
-        />
+          <QuestionCard
+            question={currentQ}
+            answer={answers[currentQ.id]}
+            isDark={isDark}
+            hasError={validationErrors[currentQ.id]}
+            onAnswerChange={handleAnswerChange}
+          />
 
-        <Navigation
-          isDark={isDark}
-          currentQuestion={currentQuestion}
-          totalQuestions={questions.length}
-          isSubmitting={isSubmitting}
-          onPrev={prevQuestion}
-          onNext={nextQuestion}
-          onSave={() => {
-            const timeSpentOnQuestion = Math.floor(
-              (Date.now() - questionStartTime) / 1000
-            );
-            setTimeSpent((prev) => ({
-              ...prev,
-              [currentQuestion]: timeSpentOnQuestion,
-            }));
-            console.log("Auto-saving progress...", {
-              timeSpent,
-              totalTimeUsed: 3600 - totalTimeLeft,
-            });
-          }}
-          onSubmit={submitSurvey}
-        />
+          <Navigation
+            isDark={isDark}
+            currentQuestion={currentQuestion}
+            totalQuestions={questions.length}
+            isSubmitting={isSubmitting}
+            onPrev={prevQuestion}
+            onNext={nextQuestion}
+            onSave={() => {
+              const timeSpentOnQuestion = Math.floor(
+                (Date.now() - questionStartTime) / 1000
+              );
+              setTimeSpent((prev) => ({
+                ...prev,
+                [currentQuestion]: timeSpentOnQuestion,
+              }));
+              console.log("Auto-saving progress...", {
+                timeSpent,
+                totalTimeUsed: 3600 - totalTimeLeft,
+              });
+            }}
+            onSubmit={submitSurvey}
+          />
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // Fallback loading state
+  return <LoadingScreen isDark={isDark} toggleTheme={toggleTheme} />;
 };
 
 export default SurveyPage;

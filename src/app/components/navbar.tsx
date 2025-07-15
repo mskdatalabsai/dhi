@@ -12,7 +12,6 @@ import {
   User,
   Target,
   Phone,
-  Home,
   LogOut,
   LogIn,
 } from "lucide-react";
@@ -40,11 +39,6 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
   }, []);
 
   const navigationLinks = [
-    {
-      name: "Home",
-      href: "/",
-      icon: <Home className="w-4 h-4" />,
-    },
     {
       name: "About Us",
       href: "/about",
