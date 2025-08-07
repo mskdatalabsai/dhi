@@ -12,7 +12,7 @@ interface QuestionCardProps {
     placeholder?: string;
     required: boolean;
     correctAnswer?: string;
-    level?: "easy" | "medium" | "advanced";
+    level?: "easy" | "Medium" | "Hard";
   };
   answer: any;
   isDark: boolean;
@@ -71,7 +71,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
               className={`text-xs font-medium px-2 py-1 rounded ${
                 question.level === "easy"
                   ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                  : question.level === "medium"
+                  : question.level === "Medium"
                   ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
                   : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
               }`}

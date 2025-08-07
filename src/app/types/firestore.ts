@@ -1,9 +1,18 @@
-// types/firestore.ts
+// types/firestore.ts - Complete file with 5-option support
 
 export interface FirestoreQuestion {
-  id: string;
-  functionalArea: string;
-  roleTitle: string;
+  id?: string;
+
+  // Technical fields
+  functionalArea?: string;
+  roleTitle?: string;
+
+  // Behavioral fields (your format)
+  cluster?: string;
+  trait?: string;
+  scaleType?: "Likert" | "Multiple Choice";
+
+  // Common fields
   questionId: string;
   question: string;
   options: {
@@ -11,54 +20,21 @@ export interface FirestoreQuestion {
     b: string;
     c: string;
     d: string;
+    e?: string; // Optional 5th option for Likert scale
   };
   correctOption: string;
-  level: "easy" | "medium" | "advanced";
-  caseId: string;
-  caseName: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+  level?: "easy" | "Medium" | "Hard"; // Only for technical
 
-export interface QuestionCase {
-  id: string;
-  caseName: string;
-  caseNumber: number;
-  description?: string;
-  totalQuestions: number;
-  questionsByLevel: {
-    easy: number;
-    medium: number;
-    advanced: number;
-  };
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+  // Metadata
+  createdAt?: Date;
+  updatedAt?: Date;
+  uploadedAt?: Date;
+  uploadedBy?: string;
+  batchId?: string;
+  collection?: string;
+  collectionType?: "technical" | "qualitative";
 
-// Firestore Collections Structure:
-//
-// /cases/{caseId}
-// - id: string
-// - caseName: string
-// - caseNumber: number
-// - description: string
-// - totalQuestions: number
-// - questionsByLevel: object
-// - isActive: boolean
-// - createdAt: timestamp
-// - updatedAt: timestamp
-//
-// /questions/{questionId}
-// - id: string
-// - functionalArea: string
-// - roleTitle: string
-// - questionId: string
-// - question: string
-// - options: object
-// - correctOption: string
-// - level: string
-// - caseId: string (reference to case)
-// - caseName: string (denormalized for easier querying)
-// - createdAt: timestamp
-// - updatedAt: timestamp
+  // Old fields for backward compatibility
+  category?: string;
+  caseId?: string;
+}

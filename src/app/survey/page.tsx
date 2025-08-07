@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
@@ -8,7 +9,7 @@ import Navbar from "../components/Navbar";
 import SurveyHeader from "../components/SurveyHeader";
 import SurveyProgress from "../components/SurveyProgress";
 import QuestionCard from "../components/QuestionCard";
-import Navigation from "../components/Navigation";
+import Navigation from "@/components/Navigation";
 import SuccessScreen from "../components/SuccessScreen";
 import LoadingScreen from "../components/LoadingScreen";
 import InstructionsPopup from "../components/InstructionsPopup";
@@ -30,6 +31,7 @@ interface DetailedQuestion {
   timeSpent: number;
   answeredAt: Date | null;
   wasChanged: boolean;
+  isQualitative?: boolean;
 }
 
 const SurveyPage = () => {
@@ -60,7 +62,9 @@ const SurveyPage = () => {
     DetailedQuestion[]
   >([]);
 
-  // New states for quiz functionality
+  // New states for intent-based system
+  const [assessmentMetadata, setAssessmentMetadata] = useState<any>({});
+  const [userIntent, setUserIntent] = useState<any>({});
   const [score, setScore] = useState(0);
   const [questionsLoadError, setQuestionsLoadError] = useState<string>("");
 
@@ -132,23 +136,63 @@ const SurveyPage = () => {
       setIsLoading(true);
       setQuestionsLoadError("");
 
-      const caseInfo = QuestionService.getHardcodedCaseInfo();
-      console.log(`Loading questions for ${caseInfo.caseName}`);
+      // First, load user's profile to get intent parameters
+      const profileResponse = await fetch("/api/profile");
+      const profileData = await profileResponse.json();
 
-      // Use balanced questions for better distribution (20 easy, 25 medium, 15 advanced)
-      const surveyQuestions =
-        await QuestionService.getBalancedQuestionsForSurvey();
-
-      if (surveyQuestions.length === 0) {
-        throw new Error(`No questions found for ${caseInfo.caseName}`);
+      if (!profileData.profile) {
+        throw new Error(
+          "Profile data not found. Please complete your profile first."
+        );
       }
 
-      setQuestions(surveyQuestions);
+      const userProfile = profileData.profile;
+      console.log("User profile loaded:", userProfile);
+
+      // Use intent-based question selection with AI optimization
+      const { questions, intent, metadata } =
+        await QuestionService.getIntentBasedQuestions(
+          {
+            age_group: userProfile.age_group,
+            education: userProfile.education,
+            experience: userProfile.experience,
+            purpose: userProfile.purpose,
+            functional_area: userProfile.functional_area,
+            current_role: userProfile.current_role || userProfile.roles, // Handle both old and new field names
+            target_roles: userProfile.target_roles || [], // New field for multiple target roles
+          },
+          {
+            useAIOptimization: true, // Enable AI-powered question selection
+          }
+        );
+
+      if (questions.length === 0) {
+        throw new Error("No questions found for your profile configuration");
+      }
+
+      setQuestions(questions);
       setIsLoading(false);
 
+      // Store intent and metadata for submission
+      setUserIntent(intent);
+      setAssessmentMetadata({
+        intent: intent.intent,
+        intentConfidence: intent.confidence,
+        reasoning: intent.reasoning,
+        recommendedPath: intent.recommendedPath,
+        ...metadata,
+      });
+
       console.log(
-        `✅ Loaded ${surveyQuestions.length} questions from ${caseInfo.caseName}`
+        `✅ Loaded ${questions.length} questions for intent: ${intent.intent}`
       );
+      console.log(`Intent reasoning: ${intent.reasoning}`);
+      console.log(`Recommended path: ${intent.recommendedPath}`);
+
+      // Optionally show intent info to user
+      if (intent.recommendedPath) {
+        console.log("Assessment customized for:", intent.recommendedPath);
+      }
     } catch (error) {
       console.error("Error loading questions from Firestore:", error);
       setQuestionsLoadError(
@@ -215,6 +259,7 @@ const SurveyPage = () => {
         timeSpent: timeSpent[index] || 0,
         answeredAt: userAnswer ? new Date() : null,
         wasChanged: answerChanges[question.id] || false,
+        isQualitative: question.isQualitative || false,
       };
     });
 
@@ -278,7 +323,6 @@ const SurveyPage = () => {
       setDetailedQuestions(detailedQuestionsData);
 
       const questionsAttempted = Object.keys(answers).length;
-      const caseInfo = QuestionService.getHardcodedCaseInfo();
 
       const surveyData = {
         startedAt: surveyStartTime,
@@ -291,13 +335,33 @@ const SurveyPage = () => {
         skippedQuestions: questions.length - questionsAttempted,
         percentage: Math.round((finalScore / questions.length) * 100),
         questions: detailedQuestionsData,
-        selectedCaseId: caseInfo.caseId,
-        caseName: caseInfo.caseName,
-        questionsByLevel: {
+
+        // Add intent-based metadata
+        assessmentType: "intent-based",
+        intent: assessmentMetadata.intent,
+        intentConfidence: assessmentMetadata.intentConfidence,
+        reasoning: assessmentMetadata.reasoning,
+        recommendedPath: assessmentMetadata.recommendedPath,
+
+        // Question breakdown
+        technicalQuestions: assessmentMetadata.technicalCount || 40,
+        qualitativeQuestions: assessmentMetadata.qualitativeCount || 29,
+        questionsByLevel: assessmentMetadata.technicalBreakdown?.byLevel || {
           easy: questions.filter((q) => q.level === "easy").length,
           medium: questions.filter((q) => q.level === "medium").length,
           advanced: questions.filter((q) => q.level === "advanced").length,
         },
+        targetRoles: assessmentMetadata.technicalBreakdown?.byRole || [],
+        qualitativeClusters:
+          assessmentMetadata.qualitativeBreakdown?.clusters || [],
+
+        // AI insights if available
+        careerInsights: assessmentMetadata.careerInsights,
+        skillGaps: assessmentMetadata.skillGaps,
+        suggestedLearningPath: assessmentMetadata.suggestedLearningPath,
+        aiOptimized: assessmentMetadata.aiOptimized || false,
+        focusAreas: assessmentMetadata.focusAreas,
+
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
 
@@ -333,6 +397,7 @@ const SurveyPage = () => {
     calculateScore,
     surveyStartTime,
     prepareDetailedQuestions,
+    assessmentMetadata,
   ]);
 
   const handleTimeUp = useCallback(() => {
@@ -489,7 +554,6 @@ const SurveyPage = () => {
   // Main survey interface
   if (questions.length > 0) {
     const currentQ = questions[currentQuestion];
-    const caseInfo = QuestionService.getHardcodedCaseInfo();
 
     return (
       <div
@@ -514,18 +578,30 @@ const SurveyPage = () => {
             getProgressBarColor={getProgressBarColor}
           />
 
-          {/* Case info and user info */}
+          {/* Assessment info */}
           <div
             className={`text-xs mb-2 flex justify-between ${
               isDark ? "text-gray-500" : "text-gray-500"
             }`}
           >
-            <span>Assessment: {caseInfo.caseName} (60 questions)</span>
+            <span>
+              Intent: {userIntent.intent} | Tech:{" "}
+              {assessmentMetadata.technicalCount || 40} | Behavioral:{" "}
+              {assessmentMetadata.qualitativeCount || 29}
+            </span>
             {session?.user && <span>Taking as: {session.user.email}</span>}
           </div>
 
           <QuestionCard
-            question={currentQ}
+            question={{
+              ...currentQ,
+              level:
+                currentQ.level === "easy" ||
+                currentQ.level === "Medium" ||
+                currentQ.level === "Hard"
+                  ? currentQ.level
+                  : undefined,
+            }}
             answer={answers[currentQ.id]}
             isDark={isDark}
             hasError={validationErrors[currentQ.id]}

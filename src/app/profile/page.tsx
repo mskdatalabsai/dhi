@@ -15,6 +15,7 @@ import {
 import Navbar from "../components/Navbar";
 import ProfileHeader from "../components/ProfileHeader";
 import SelectField from "../components/SelectField";
+import MultiSelectField from "../components/MultiSelectField";
 import SubmitSection from "../components/SubmitSection";
 
 const ProfilePage = () => {
@@ -31,7 +32,8 @@ const ProfilePage = () => {
     experience: "",
     purpose: "",
     functional_area: "",
-    roles: "",
+    current_role: "",
+    target_roles: [] as string[],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -92,7 +94,8 @@ const ProfilePage = () => {
           experience: data.profile.experience || "",
           purpose: data.profile.purpose || "",
           functional_area: data.profile.functional_area || "",
-          roles: data.profile.roles || "",
+          current_role: data.profile.current_role || "",
+          target_roles: data.profile.target_roles || [],
         });
       }
     } catch (error) {
@@ -140,6 +143,38 @@ const ProfilePage = () => {
       "Cybersecurity",
       "Business-Facing Tech Roles",
     ],
+    current_roles: [
+      "None / Not Currently in IT",
+      "Software Engineer / Developer",
+      "Mobile Developer (iOS/Android)",
+      "DevOps Engineer",
+      "MLOps Engineer",
+      "Software Architect",
+      "Business Analyst",
+      "Product Manager",
+      "Technical Product Manager",
+      "Product Owner",
+      "QA Engineer / Software Tester",
+      "Automation Engineer",
+      "UX Designer (User Experience)",
+      "UI Designer (User Interface)",
+      "Data Scientist",
+      "AI/ML Engineer",
+      "Data Engineer",
+      "Business Intelligence Expert",
+      "Data Analyst",
+      "Systems Administrator",
+      "Network Engineer",
+      "Cloud Engineer",
+      "Database Administrator (SQL/NoSQL DBA)",
+      "Pre-Sales Engineer / Solutions Consultant",
+      "IT Sales / Technical Business Development",
+      "Cybersecurity Analyst",
+      "Security Engineer",
+      "SOC Analyst (Security Operations Center)",
+      "Ethical Hacker / Penetration Tester",
+      "Information Security Specialist",
+    ],
     roles: [
       "Software Engineer / Developer",
       "Mobile Developer (iOS/Android)",
@@ -182,6 +217,14 @@ const ProfilePage = () => {
     }
   };
 
+  const handleMultiSelectChange = (name: string, values: string[]) => {
+    setFormData((prev) => ({ ...prev, [name]: values }));
+
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.age_group) newErrors.age_group = "Age group is required";
@@ -192,7 +235,12 @@ const ProfilePage = () => {
     if (!formData.purpose) newErrors.purpose = "Purpose is required";
     if (!formData.functional_area)
       newErrors.functional_area = "Functional area is required";
-    if (!formData.roles) newErrors.roles = "Role selection is required";
+    if (!formData.current_role)
+      newErrors.current_role =
+        "Please select your current role (or 'None' if not in IT)";
+    if (formData.target_roles.length === 0)
+      newErrors.target_roles = "Please select at least one target role";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -226,10 +274,20 @@ const ProfilePage = () => {
   };
 
   const getCompletionPercentage = () => {
-    const filledFields = Object.values(formData).filter(
+    const fields = {
+      age_group: formData.age_group,
+      education: formData.education,
+      experience: formData.experience,
+      purpose: formData.purpose,
+      functional_area: formData.functional_area,
+      current_role: formData.current_role,
+      target_roles: formData.target_roles.length > 0 ? "filled" : "",
+    };
+
+    const filledFields = Object.values(fields).filter(
       (value) => value !== ""
     ).length;
-    return Math.round((filledFields / Object.keys(formData).length) * 100);
+    return Math.round((filledFields / Object.keys(fields).length) * 100);
   };
 
   // Show loading screen while checking authentication and payment
@@ -366,15 +424,31 @@ const ProfilePage = () => {
                 error={errors.functional_area}
                 isDark={isDark}
               />
+
               <SelectField
-                name="roles"
-                label="Specific Role Interest"
+                name="current_role"
+                label="Current Role (select 'None' if not in IT)"
                 icon={<Briefcase className="w-4 h-4" />}
-                options={formOptions.roles}
-                value={formData.roles}
+                options={formOptions.current_roles}
+                value={formData.current_role}
                 onChange={handleInputChange}
-                error={errors.roles}
+                error={errors.current_role}
                 isDark={isDark}
+              />
+
+              <MultiSelectField
+                name="target_roles"
+                label="Target/Interest Roles (select 1-3 roles)"
+                icon={<Target className="w-4 h-4" />}
+                options={formOptions.roles}
+                value={formData.target_roles}
+                onChange={(values) =>
+                  handleMultiSelectChange("target_roles", values)
+                }
+                error={errors.target_roles}
+                isDark={isDark}
+                placeholder="Select roles you're interested in..."
+                maxSelections={3}
               />
             </div>
           </Section>
