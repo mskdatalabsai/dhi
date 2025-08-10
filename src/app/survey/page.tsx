@@ -10,7 +10,6 @@ import SurveyHeader from "../components/SurveyHeader";
 import SurveyProgress from "../components/SurveyProgress";
 import QuestionCard from "../components/QuestionCard";
 import Navigation from "@/components/Navigation";
-import SuccessScreen from "../components/SuccessScreen";
 import LoadingScreen from "../components/LoadingScreen";
 import InstructionsPopup from "../components/InstructionsPopup";
 
@@ -28,6 +27,7 @@ interface DetailedQuestion {
   correctAnswer: string;
   userAnswer: string | null;
   isCorrect: boolean;
+  countsTowardScore: boolean; // NEW: Whether this question affects the score
   timeSpent: number;
   answeredAt: Date | null;
   wasChanged: boolean;
@@ -42,7 +42,6 @@ const SurveyPage = () => {
   const [answers, setAnswers] = useState<{ [key: number]: number }>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{
     [key: number]: boolean;
   }>({});
@@ -68,6 +67,9 @@ const SurveyPage = () => {
   const [score, setScore] = useState(0);
   const [questionsLoadError, setQuestionsLoadError] = useState<string>("");
 
+  // New state for survey completion tracking
+  const [hasTakenSurvey, setHasTakenSurvey] = useState(false);
+
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) setIsDark(savedTheme === "dark");
@@ -79,10 +81,36 @@ const SurveyPage = () => {
     }
 
     if (status === "authenticated") {
-      // Check payment and profile status, then load questions
-      checkPaymentProfileAndLoadQuestions();
+      // Check if user has already taken the survey
+      checkSurveyStatusAndRedirect();
     }
   }, [status, router]);
+
+  const checkSurveyStatusAndRedirect = async () => {
+    try {
+      setIsLoading(true);
+
+      // Check if user has already taken the survey using the existing API
+      const surveyResponse = await fetch("/api/survey?limit=1&detailed=false");
+      if (surveyResponse.ok) {
+        const surveyData = await surveyResponse.json();
+
+        if (surveyData.surveys && surveyData.surveys.length > 0) {
+          // User has already taken a survey, redirect to results
+          console.log("User has already taken survey, redirecting to results");
+          router.push("/result");
+          return;
+        }
+      }
+
+      // Continue with payment and profile checks
+      checkPaymentProfileAndLoadQuestions();
+    } catch (error) {
+      console.error("Error checking survey status:", error);
+      // Continue with normal flow even if status check fails
+      checkPaymentProfileAndLoadQuestions();
+    }
+  };
 
   const checkPaymentProfileAndLoadQuestions = async () => {
     try {
@@ -158,11 +186,11 @@ const SurveyPage = () => {
             experience: userProfile.experience,
             purpose: userProfile.purpose,
             functional_area: userProfile.functional_area,
-            current_role: userProfile.current_role || userProfile.roles, // Handle both old and new field names
-            target_roles: userProfile.target_roles || [], // New field for multiple target roles
+            current_role: userProfile.current_role || userProfile.roles,
+            target_roles: userProfile.target_roles || [],
           },
           {
-            useAIOptimization: true, // Enable AI-powered question selection
+            useAIOptimization: true,
           }
         );
 
@@ -189,7 +217,6 @@ const SurveyPage = () => {
       console.log(`Intent reasoning: ${intent.reasoning}`);
       console.log(`Recommended path: ${intent.recommendedPath}`);
 
-      // Optionally show intent info to user
       if (intent.recommendedPath) {
         console.log("Assessment customized for:", intent.recommendedPath);
       }
@@ -236,6 +263,7 @@ const SurveyPage = () => {
     return "bg-purple-500";
   };
 
+  // Updated prepareDetailedQuestions to mark scoring status
   const prepareDetailedQuestions = useCallback(() => {
     const detailed: DetailedQuestion[] = questions.map((question, index) => {
       const userAnswerIndex = answers[question.id];
@@ -244,7 +272,11 @@ const SurveyPage = () => {
           ? String.fromCharCode(97 + userAnswerIndex)
           : null;
 
-      const isCorrect = userAnswer === question.correctAnswer;
+      // Only calculate isCorrect for technical questions
+      const isCorrect =
+        !question.isQualitative && userAnswer === question.correctAnswer;
+      const countsTowardScore =
+        !question.isQualitative && !!question.correctAnswer;
 
       return {
         questionId: `q_${question.id}`,
@@ -256,6 +288,7 @@ const SurveyPage = () => {
         correctAnswer: question.correctAnswer || "",
         userAnswer,
         isCorrect,
+        countsTowardScore, // NEW: Flag to indicate if this question affects score
         timeSpent: timeSpent[index] || 0,
         answeredAt: userAnswer ? new Date() : null,
         wasChanged: answerChanges[question.id] || false,
@@ -266,10 +299,15 @@ const SurveyPage = () => {
     return detailed;
   }, [questions, answers, timeSpent, answerChanges]);
 
+  // Updated calculateScore function for technical questions only
   const calculateScore = useCallback(() => {
     let correctAnswers = 0;
+    let technicalQuestionsCount = 0;
+
     questions.forEach((question) => {
-      if (question.correctAnswer) {
+      // Only score technical questions
+      if (question.correctAnswer && !question.isQualitative) {
+        technicalQuestionsCount++;
         const userAnswer = answers[question.id];
         if (typeof userAnswer === "number" && question.options) {
           const answerLetter = String.fromCharCode(97 + userAnswer);
@@ -279,9 +317,17 @@ const SurveyPage = () => {
         }
       }
     });
+
+    // Store technical questions count for percentage calculation
+    setAssessmentMetadata((prev: any) => ({
+      ...prev,
+      actualTechnicalCount: technicalQuestionsCount,
+    }));
+
     return correctAnswers;
   }, [answers, questions]);
 
+  // Modified submit survey function with technical-only scoring
   const submitSurvey = useCallback(async () => {
     const timeSpentOnQuestion = Math.floor(
       (Date.now() - questionStartTime) / 1000
@@ -324,47 +370,85 @@ const SurveyPage = () => {
 
       const questionsAttempted = Object.keys(answers).length;
 
+      // Calculate technical vs qualitative breakdown
+      const technicalQuestions = questions.filter((q) => !q.isQualitative);
+      const qualitativeQuestions = questions.filter((q) => q.isQualitative);
+      const technicalQuestionsCount = technicalQuestions.length;
+      const qualitativeQuestionsCount = qualitativeQuestions.length;
+
+      // Calculate percentage based ONLY on technical questions
+      const technicalPercentage =
+        technicalQuestionsCount > 0
+          ? Math.round((finalScore / technicalQuestionsCount) * 100)
+          : 0;
+
+      // Prepare survey data with technical-only scoring
       const surveyData = {
+        // Basic survey data - Updated scoring logic
         startedAt: surveyStartTime,
-        answers,
-        timeSpent,
         totalTimeUsed: 3600 - totalTimeLeft,
-        score: finalScore,
-        totalQuestions: questions.length,
+        score: finalScore, // Only technical questions
+        totalQuestions: questions.length, // All questions
+        technicalQuestionsTotal: technicalQuestionsCount, // NEW: Total technical questions
+        qualitativeQuestionsTotal: qualitativeQuestionsCount, // NEW: Total qualitative questions
         questionsAttempted,
         skippedQuestions: questions.length - questionsAttempted,
-        percentage: Math.round((finalScore / questions.length) * 100),
+        percentage: technicalPercentage, // Percentage based ONLY on technical questions
+
+        // Scoring metadata (NEW)
+        scoringMethod: "technical_only",
+        scoredQuestionsCount: technicalQuestionsCount,
+        analysisOnlyQuestionsCount: qualitativeQuestionsCount,
+
+        // Detailed questions data
         questions: detailedQuestionsData,
 
-        // Add intent-based metadata
+        // Timing and interaction data
+        timeSpent,
+        answers,
+
+        // Intent-based metadata
         assessmentType: "intent-based",
         intent: assessmentMetadata.intent,
         intentConfidence: assessmentMetadata.intentConfidence,
         reasoning: assessmentMetadata.reasoning,
         recommendedPath: assessmentMetadata.recommendedPath,
 
-        // Question breakdown
-        technicalQuestions: assessmentMetadata.technicalCount || 40,
-        qualitativeQuestions: assessmentMetadata.qualitativeCount || 29,
-        questionsByLevel: assessmentMetadata.technicalBreakdown?.byLevel || {
-          easy: questions.filter((q) => q.level === "easy").length,
-          medium: questions.filter((q) => q.level === "medium").length,
-          advanced: questions.filter((q) => q.level === "advanced").length,
+        // Question breakdown - Updated with actual counts
+        technicalQuestions: technicalQuestionsCount,
+        qualitativeQuestions: qualitativeQuestionsCount,
+        questionsByLevel: {
+          easy: technicalQuestions.filter((q) => q.level === "easy").length,
+          medium: technicalQuestions.filter((q) => q.level === "medium").length,
+          advanced: technicalQuestions.filter((q) => q.level === "advanced")
+            .length,
         },
+
+        // Qualitative breakdown for analysis (NEW)
+        qualitativeBreakdown: {
+          easy: qualitativeQuestions.filter((q) => q.level === "easy").length,
+          medium: qualitativeQuestions.filter((q) => q.level === "medium")
+            .length,
+          advanced: qualitativeQuestions.filter((q) => q.level === "advanced")
+            .length,
+        },
+
         targetRoles: assessmentMetadata.technicalBreakdown?.byRole || [],
         qualitativeClusters:
           assessmentMetadata.qualitativeBreakdown?.clusters || [],
 
-        // AI insights if available
+        // AI insights
         careerInsights: assessmentMetadata.careerInsights,
         skillGaps: assessmentMetadata.skillGaps,
         suggestedLearningPath: assessmentMetadata.suggestedLearningPath,
         aiOptimized: assessmentMetadata.aiOptimized || false,
         focusAreas: assessmentMetadata.focusAreas,
 
+        // System metadata
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
 
+      // Submit survey results using the existing API endpoint
       const response = await fetch("/api/survey", {
         method: "POST",
         headers: {
@@ -377,7 +461,20 @@ const SurveyPage = () => {
 
       if (response.ok) {
         console.log("Survey submitted successfully:", result);
-        setShowSuccess(true);
+
+        // Updated success message to clarify scoring
+        const successMessage = `🎉 Assessment completed successfully!
+
+Technical Score: ${surveyData.percentage}% (${finalScore}/${technicalQuestionsCount} technical questions)
+Qualitative Questions: ${qualitativeQuestionsCount} completed for analysis
+
+Redirecting to your detailed results...`;
+        alert(successMessage);
+
+        // Small delay to show the success message, then redirect
+        setTimeout(() => {
+          router.push("/result");
+        }, 1000);
       } else {
         throw new Error(result.error || "Failed to save survey results");
       }
@@ -398,6 +495,7 @@ const SurveyPage = () => {
     surveyStartTime,
     prepareDetailedQuestions,
     assessmentMetadata,
+    router,
   ]);
 
   const handleTimeUp = useCallback(() => {
@@ -407,7 +505,7 @@ const SurveyPage = () => {
   }, [submitSurvey]);
 
   useEffect(() => {
-    if (!timerActive || showSuccess || isLoading) return;
+    if (!timerActive || isLoading) return;
 
     const timer = setInterval(() => {
       setTotalTimeLeft((prev) => {
@@ -420,7 +518,7 @@ const SurveyPage = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timerActive, showSuccess, isLoading, handleTimeUp]);
+  }, [timerActive, isLoading, handleTimeUp]);
 
   useEffect(() => {
     if (instructionsAccepted) {
@@ -478,7 +576,7 @@ const SurveyPage = () => {
     setCurrentQuestion((prev) => Math.max(prev - 1, 0));
   };
 
-  // Show loading screen while checking authentication, payment, and profile
+  // Show loading screen while checking authentication, payment, profile, and survey status
   if (status === "loading" || isLoading) {
     return <LoadingScreen isDark={isDark} toggleTheme={toggleTheme} />;
   }
@@ -518,19 +616,6 @@ const SurveyPage = () => {
           </div>
         </div>
       </div>
-    );
-  }
-
-  // Show success screen
-  if (showSuccess) {
-    return (
-      <SuccessScreen
-        isDark={isDark}
-        toggleTheme={toggleTheme}
-        score={score}
-        totalQuestions={questions.length}
-        percentage={Math.round((score / questions.length) * 100)}
-      />
     );
   }
 
@@ -578,7 +663,7 @@ const SurveyPage = () => {
             getProgressBarColor={getProgressBarColor}
           />
 
-          {/* Assessment info */}
+          {/* Assessment info - Updated to show scoring info */}
           <div
             className={`text-xs mb-2 flex justify-between ${
               isDark ? "text-gray-500" : "text-gray-500"
@@ -586,8 +671,9 @@ const SurveyPage = () => {
           >
             <span>
               Intent: {userIntent.intent} | Tech:{" "}
-              {assessmentMetadata.technicalCount || 40} | Behavioral:{" "}
-              {assessmentMetadata.qualitativeCount || 29}
+              {questions.filter((q) => !q.isQualitative).length} (scored) |
+              Behavioral: {questions.filter((q) => q.isQualitative).length}{" "}
+              (analysis)
             </span>
             {session?.user && <span>Taking as: {session.user.email}</span>}
           </div>
