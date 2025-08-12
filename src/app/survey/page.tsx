@@ -27,11 +27,14 @@ interface DetailedQuestion {
   correctAnswer: string;
   userAnswer: string | null;
   isCorrect: boolean;
-  countsTowardScore: boolean; // NEW: Whether this question affects the score
+  countsTowardScore: boolean; // Whether this question affects the score
   timeSpent: number;
   answeredAt: Date | null;
   wasChanged: boolean;
   isQualitative?: boolean;
+  // FIXED: Additional fields for better tracking
+  answered?: boolean;
+  responseText?: string | null;
 }
 
 const SurveyPage = () => {
@@ -194,11 +197,93 @@ const SurveyPage = () => {
           }
         );
 
-      if (questions.length === 0) {
+      if (!questions || questions.length === 0) {
         throw new Error("No questions found for your profile configuration");
       }
 
-      setQuestions(questions);
+      console.log(`🔍 Raw questions received: ${questions.length}`);
+
+      // FIXED: Less aggressive deduplication - only remove exact duplicates
+      const seenIds = new Set();
+      const seenTexts = new Set();
+      const duplicatesRemoved: string[] = [];
+
+      const uniqueQuestions = questions.filter(
+        (question: any, index: number) => {
+          // Check for ID duplicates
+          if (question.id && seenIds.has(question.id)) {
+            duplicatesRemoved.push(`ID duplicate: ${question.id}`);
+            return false;
+          }
+
+          // Check for exact text duplicates (only if both have question text)
+          if (question.question) {
+            const normalizedText = question.question.trim().toLowerCase();
+            if (seenTexts.has(normalizedText)) {
+              duplicatesRemoved.push(
+                `Text duplicate: ${question.question.substring(0, 50)}...`
+              );
+              return false;
+            }
+            seenTexts.add(normalizedText);
+          }
+
+          if (question.id) {
+            seenIds.add(question.id);
+          }
+
+          return true;
+        }
+      );
+
+      console.log(
+        `🔍 After deduplication: ${uniqueQuestions.length} unique questions`
+      );
+
+      if (duplicatesRemoved.length > 0) {
+        console.warn(
+          `⚠️ Removed ${duplicatesRemoved.length} duplicate questions:`,
+          duplicatesRemoved
+        );
+      }
+
+      // FIXED: Ensure each question has proper structure and ID
+      const questionsWithIds = uniqueQuestions.map(
+        (question: any, index: number) => ({
+          ...question,
+          id: question.id || `question_${index}_${Date.now()}`,
+          uniqueIndex: index,
+          // FIXED: Ensure proper question classification
+          isQualitative: question.isQualitative || false,
+          required: question.required !== false, // Default to required unless explicitly false
+        })
+      );
+
+      // FIXED: Validate question structure
+      const validQuestions = questionsWithIds.filter((question: any) => {
+        if (!question.question || question.question.trim() === "") {
+          console.warn(`⚠️ Skipping question with empty text:`, question);
+          return false;
+        }
+        if (
+          !question.options ||
+          !Array.isArray(question.options) ||
+          question.options.length === 0
+        ) {
+          console.warn(
+            `⚠️ Skipping question with no options:`,
+            question.question?.substring(0, 50)
+          );
+          return false;
+        }
+        return true;
+      });
+
+      console.log(
+        `🔍 After validation: ${validQuestions.length} valid questions`
+      );
+
+      setQuestions(validQuestions);
       setIsLoading(false);
 
       // Store intent and metadata for submission
@@ -211,9 +296,47 @@ const SurveyPage = () => {
         ...metadata,
       });
 
-      console.log(
-        `✅ Loaded ${questions.length} questions for intent: ${intent.intent}`
+      // FIXED: Enhanced logging for question breakdown
+      const technicalQuestions = validQuestions.filter(
+        (q: any) => !q.isQualitative
       );
+      const qualitativeQuestions = validQuestions.filter(
+        (q: any) => q.isQualitative
+      );
+
+      console.log(
+        `✅ Loaded ${validQuestions.length} questions for intent: ${intent.intent}`
+      );
+      console.log(`📊 Question breakdown:`);
+      console.log(`  - Technical: ${technicalQuestions.length} (with scoring)`);
+      console.log(
+        `  - Qualitative: ${qualitativeQuestions.length} (for analysis)`
+      );
+      console.log(`  - Total: ${validQuestions.length}`);
+
+      // Log level distribution
+      const levelCounts = {
+        technical: { easy: 0, medium: 0, advanced: 0 },
+        qualitative: { easy: 0, medium: 0, advanced: 0 },
+      };
+
+      technicalQuestions.forEach((q: any) => {
+        const level = q.level?.toLowerCase();
+        if (level === "easy") levelCounts.technical.easy++;
+        else if (level === "medium") levelCounts.technical.medium++;
+        else if (level === "advanced" || level === "hard")
+          levelCounts.technical.advanced++;
+      });
+
+      qualitativeQuestions.forEach((q: any) => {
+        const level = q.level?.toLowerCase();
+        if (level === "easy") levelCounts.qualitative.easy++;
+        else if (level === "medium") levelCounts.qualitative.medium++;
+        else if (level === "advanced" || level === "hard")
+          levelCounts.qualitative.advanced++;
+      });
+
+      console.log(`📈 Level distribution:`, levelCounts);
       console.log(`Intent reasoning: ${intent.reasoning}`);
       console.log(`Recommended path: ${intent.recommendedPath}`);
 
@@ -263,16 +386,18 @@ const SurveyPage = () => {
     return "bg-purple-500";
   };
 
-  // Updated prepareDetailedQuestions to mark scoring status
+  // FIXED: Enhanced prepareDetailedQuestions to store ALL question results
   const prepareDetailedQuestions = useCallback(() => {
     const detailed: DetailedQuestion[] = questions.map((question, index) => {
       const userAnswerIndex = answers[question.id];
       const userAnswer =
         typeof userAnswerIndex === "number"
-          ? String.fromCharCode(97 + userAnswerIndex)
+          ? question.options && question.options[userAnswerIndex]
+            ? String.fromCharCode(97 + userAnswerIndex)
+            : null
           : null;
 
-      // Only calculate isCorrect for technical questions
+      // FIXED: Calculate isCorrect for technical questions, store response for qualitative
       const isCorrect =
         !question.isQualitative && userAnswer === question.correctAnswer;
       const countsTowardScore =
@@ -286,27 +411,57 @@ const SurveyPage = () => {
         level: question.level || "medium",
         options: question.options || [],
         correctAnswer: question.correctAnswer || "",
-        userAnswer,
+        userAnswer, // FIXED: This now stores responses for BOTH technical and qualitative
         isCorrect,
-        countsTowardScore, // NEW: Flag to indicate if this question affects score
+        countsTowardScore,
         timeSpent: timeSpent[index] || 0,
         answeredAt: userAnswer ? new Date() : null,
         wasChanged: answerChanges[question.id] || false,
         isQualitative: question.isQualitative || false,
+        // FIXED: Add additional fields for better tracking
+        answered: userAnswer !== null,
+        responseText:
+          userAnswerIndex !== undefined &&
+          question.options &&
+          question.options[userAnswerIndex]
+            ? question.options[userAnswerIndex]
+            : null,
       };
     });
+
+    // FIXED: Log detailed breakdown
+    const technical = detailed.filter((q) => !q.isQualitative);
+    const qualitative = detailed.filter((q) => q.isQualitative);
+    const technicalAnswered = technical.filter((q) => q.answered).length;
+    const qualitativeAnswered = qualitative.filter((q) => q.answered).length;
+
+    console.log(`📊 Detailed Questions Prepared:`);
+    console.log(`  - Total Questions: ${detailed.length}`);
+    console.log(
+      `  - Technical: ${technical.length} (${technicalAnswered} answered)`
+    );
+    console.log(
+      `  - Qualitative: ${qualitative.length} (${qualitativeAnswered} answered)`
+    );
+    console.log(
+      `  - Total Answered: ${detailed.filter((q) => q.answered).length}`
+    );
 
     return detailed;
   }, [questions, answers, timeSpent, answerChanges]);
 
-  // Updated calculateScore function for technical questions only
+  // FIXED: Calculate score function for TECHNICAL QUESTIONS ONLY
   const calculateScore = useCallback(() => {
     let correctAnswers = 0;
     let technicalQuestionsCount = 0;
 
     questions.forEach((question) => {
-      // Only score technical questions
-      if (question.correctAnswer && !question.isQualitative) {
+      // FIXED: Only score technical questions (must have correctAnswer and NOT be qualitative)
+      if (
+        !question.isQualitative &&
+        question.correctAnswer &&
+        question.correctAnswer.trim() !== ""
+      ) {
         technicalQuestionsCount++;
         const userAnswer = answers[question.id];
         if (typeof userAnswer === "number" && question.options) {
@@ -318,6 +473,19 @@ const SurveyPage = () => {
       }
     });
 
+    console.log(`🎯 SCORING CALCULATION:`);
+    console.log(`  - Total Questions: ${questions.length}`);
+    console.log(
+      `  - Technical Questions (scorable): ${technicalQuestionsCount}`
+    );
+    console.log(
+      `  - Qualitative Questions: ${questions.length - technicalQuestionsCount}`
+    );
+    console.log(`  - Correct Technical Answers: ${correctAnswers}`);
+    console.log(
+      `  - Technical Score: ${correctAnswers}/${technicalQuestionsCount}`
+    );
+
     // Store technical questions count for percentage calculation
     setAssessmentMetadata((prev: any) => ({
       ...prev,
@@ -327,7 +495,7 @@ const SurveyPage = () => {
     return correctAnswers;
   }, [answers, questions]);
 
-  // Modified submit survey function with technical-only scoring
+  // FIXED: Enhanced submitSurvey function with proper level calculation
   const submitSurvey = useCallback(async () => {
     const timeSpentOnQuestion = Math.floor(
       (Date.now() - questionStartTime) / 1000
@@ -338,24 +506,51 @@ const SurveyPage = () => {
     }));
 
     const errors: { [key: number]: boolean } = {};
-    let skippedCount = 0;
+    let requiredSkipped = 0;
+    let totalRequired = 0;
 
+    // FIXED: Better validation logic
     questions.forEach((question) => {
-      if (question.required) {
+      if (question.required !== false) {
+        // Default to required unless explicitly false
+        totalRequired++;
         const answer = answers[question.id];
         const isValid = answer !== null && answer !== undefined;
         if (!isValid) {
           errors[question.id] = true;
-          skippedCount++;
+          requiredSkipped++;
         }
       }
     });
 
+    console.log(`🔍 Validation Results:`);
+    console.log(`  - Total Questions: ${questions.length}`);
+    console.log(`  - Required Questions: ${totalRequired}`);
+    console.log(`  - Required Skipped: ${requiredSkipped}`);
+    console.log(`  - Total Answered: ${Object.keys(answers).length}`);
+
+    // FIXED: More lenient validation - allow submission if most questions are answered
     if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors);
-      const firstErrorIndex = questions.findIndex((q) => errors[q.id]);
-      setCurrentQuestion(firstErrorIndex);
-      return;
+      const skipPercentage = (requiredSkipped / totalRequired) * 100;
+
+      if (skipPercentage > 20) {
+        // Only block if more than 20% of required questions are skipped
+        setValidationErrors(errors);
+        const firstErrorIndex = questions.findIndex((q) => errors[q.id]);
+        setCurrentQuestion(firstErrorIndex);
+        alert(
+          `Please answer more questions. You have skipped ${requiredSkipped} required questions (${skipPercentage.toFixed(
+            1
+          )}% of required questions).`
+        );
+        return;
+      } else {
+        console.log(
+          `⚠️ Allowing submission with ${requiredSkipped} skipped questions (${skipPercentage.toFixed(
+            1
+          )}%)`
+        );
+      }
     }
 
     setIsSubmitting(true);
@@ -368,44 +563,148 @@ const SurveyPage = () => {
       const detailedQuestionsData = prepareDetailedQuestions();
       setDetailedQuestions(detailedQuestionsData);
 
-      const questionsAttempted = Object.keys(answers).length;
+      // FIXED: Better counting of attempted questions (ALL questions, not just answers object)
+      const totalAnswered = detailedQuestionsData.filter(
+        (q) => q.answered
+      ).length;
+      const questionsAttempted = totalAnswered;
 
-      // Calculate technical vs qualitative breakdown
-      const technicalQuestions = questions.filter((q) => !q.isQualitative);
-      const qualitativeQuestions = questions.filter((q) => q.isQualitative);
+      // FIXED: Strict separation of technical vs qualitative questions for scoring
+      const allQuestions = questions || [];
+
+      // FIXED: Only technical questions with valid correctAnswer are used for scoring
+      const technicalQuestions = allQuestions.filter(
+        (q) =>
+          !q.isQualitative && q.correctAnswer && q.correctAnswer.trim() !== ""
+      );
+
+      // All qualitative questions (regardless of correctAnswer)
+      const qualitativeQuestions = allQuestions.filter((q) => q.isQualitative);
+
+      // Questions that are neither technical nor qualitative (should not exist)
+      const uncategorizedQuestions = allQuestions.filter(
+        (q) =>
+          !q.isQualitative &&
+          (!q.correctAnswer || q.correctAnswer.trim() === "")
+      );
+
       const technicalQuestionsCount = technicalQuestions.length;
       const qualitativeQuestionsCount = qualitativeQuestions.length;
 
-      // Calculate percentage based ONLY on technical questions
+      console.log(`🔍 FINAL Question Classification for Scoring:`);
+      console.log(`  - Total Questions Loaded: ${allQuestions.length}`);
+      console.log(
+        `  - Technical Questions (FOR SCORING): ${technicalQuestionsCount}`
+      );
+      console.log(
+        `  - Qualitative Questions (FOR ANALYSIS): ${qualitativeQuestionsCount}`
+      );
+      console.log(
+        `  - Uncategorized Questions: ${uncategorizedQuestions.length}`
+      );
+      console.log(`  - Questions Attempted: ${questionsAttempted}`);
+      console.log(
+        `  - Technical Score: ${finalScore}/${technicalQuestionsCount}`
+      );
+
+      if (uncategorizedQuestions.length > 0) {
+        console.warn(
+          `⚠️ Found ${uncategorizedQuestions.length} uncategorized questions:`,
+          uncategorizedQuestions.map((q) => q.question?.substring(0, 50))
+        );
+      }
+
+      // FIXED: Level breakdown calculation with STRICT separation
+      const calculateLevelBreakdown = (
+        questionSet: any[],
+        type: "technical" | "qualitative"
+      ) => {
+        const levelMap = { easy: 0, medium: 0, advanced: 0 };
+
+        questionSet.forEach((q) => {
+          // Normalize level names to lowercase and handle variations
+          const normalizedLevel = q.level?.toLowerCase();
+
+          if (normalizedLevel === "easy") {
+            levelMap.easy++;
+          } else if (normalizedLevel === "medium") {
+            levelMap.medium++;
+          } else if (
+            normalizedLevel === "advanced" ||
+            normalizedLevel === "hard"
+          ) {
+            levelMap.advanced++;
+          } else {
+            // Log unknown levels for debugging
+            console.warn(
+              `Unknown level "${q.level}" in ${type} question:`,
+              q.question?.substring(0, 50)
+            );
+          }
+        });
+
+        console.log(`📊 ${type} level breakdown:`, levelMap);
+        return levelMap;
+      };
+
+      // FIXED: Calculate level breakdowns using ONLY properly classified questions
+      const questionsByLevel = calculateLevelBreakdown(
+        technicalQuestions,
+        "technical"
+      );
+      const qualitativeBreakdown = calculateLevelBreakdown(
+        qualitativeQuestions,
+        "qualitative"
+      );
+
+      // FIXED: Calculate percentage based ONLY on technical questions
       const technicalPercentage =
         technicalQuestionsCount > 0
           ? Math.round((finalScore / technicalQuestionsCount) * 100)
           : 0;
 
-      // Prepare survey data with technical-only scoring
+      console.log(`🎯 FINAL SCORING METRICS:`);
+      console.log(
+        `  - Technical Score: ${finalScore}/${technicalQuestionsCount} (${technicalPercentage}%)`
+      );
+      console.log(`  - Technical Levels:`, questionsByLevel);
+      console.log(`  - Qualitative Levels:`, qualitativeBreakdown);
+
+      // FIXED: Enhanced survey data with proper field mapping and ALL questions included
       const surveyData = {
         // Basic survey data - Updated scoring logic
         startedAt: surveyStartTime,
         totalTimeUsed: 3600 - totalTimeLeft,
         score: finalScore, // Only technical questions
-        totalQuestions: questions.length, // All questions
-        technicalQuestionsTotal: technicalQuestionsCount, // NEW: Total technical questions
-        qualitativeQuestionsTotal: qualitativeQuestionsCount, // NEW: Total qualitative questions
-        questionsAttempted,
-        skippedQuestions: questions.length - questionsAttempted,
-        percentage: technicalPercentage, // Percentage based ONLY on technical questions
+        totalQuestions: allQuestions.length, // ALL questions loaded
 
-        // Scoring metadata (NEW)
+        // FIXED: Use the exact field names that the API expects
+        technicalQuestionsTotal: technicalQuestionsCount,
+        qualitativeQuestionsTotal: qualitativeQuestionsCount,
+
+        questionsAttempted, // FIXED: Now counts ALL answered questions
+        skippedQuestions: allQuestions.length - questionsAttempted,
+        percentage: technicalPercentage,
+
+        // FIXED: Scoring metadata with exact field names
         scoringMethod: "technical_only",
         scoredQuestionsCount: technicalQuestionsCount,
         analysisOnlyQuestionsCount: qualitativeQuestionsCount,
 
-        // Detailed questions data
-        questions: detailedQuestionsData,
+        // FIXED: Level breakdowns with proper structure
+        questionsByLevel, // Technical questions by level
+        qualitativeBreakdown, // Qualitative questions by level
+
+        // Question counts (legacy fields for backward compatibility)
+        technicalQuestions: technicalQuestionsCount,
+        qualitativeQuestions: qualitativeQuestionsCount,
+
+        // FIXED: Include ALL questions in detailed data (both technical and qualitative)
+        questions: detailedQuestionsData, // This now includes ALL questions with their responses
 
         // Timing and interaction data
         timeSpent,
-        answers,
+        answers, // Raw answers object for reference
 
         // Intent-based metadata
         assessmentType: "intent-based",
@@ -414,30 +713,10 @@ const SurveyPage = () => {
         reasoning: assessmentMetadata.reasoning,
         recommendedPath: assessmentMetadata.recommendedPath,
 
-        // Question breakdown - Updated with actual counts
-        technicalQuestions: technicalQuestionsCount,
-        qualitativeQuestions: qualitativeQuestionsCount,
-        questionsByLevel: {
-          easy: technicalQuestions.filter((q) => q.level === "easy").length,
-          medium: technicalQuestions.filter((q) => q.level === "medium").length,
-          advanced: technicalQuestions.filter((q) => q.level === "advanced")
-            .length,
-        },
-
-        // Qualitative breakdown for analysis (NEW)
-        qualitativeBreakdown: {
-          easy: qualitativeQuestions.filter((q) => q.level === "easy").length,
-          medium: qualitativeQuestions.filter((q) => q.level === "medium")
-            .length,
-          advanced: qualitativeQuestions.filter((q) => q.level === "advanced")
-            .length,
-        },
-
+        // Career insights
         targetRoles: assessmentMetadata.technicalBreakdown?.byRole || [],
         qualitativeClusters:
           assessmentMetadata.qualitativeBreakdown?.clusters || [],
-
-        // AI insights
         careerInsights: assessmentMetadata.careerInsights,
         skillGaps: assessmentMetadata.skillGaps,
         suggestedLearningPath: assessmentMetadata.suggestedLearningPath,
@@ -447,6 +726,25 @@ const SurveyPage = () => {
         // System metadata
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
+
+      // FIXED: Debug logging to verify data before submission
+      console.log("🔍 Survey Data Debug Before Submission:", {
+        totalQuestions: surveyData.totalQuestions,
+        technicalQuestionsTotal: surveyData.technicalQuestionsTotal,
+        qualitativeQuestionsTotal: surveyData.qualitativeQuestionsTotal,
+        questionsByLevel: surveyData.questionsByLevel,
+        qualitativeBreakdown: surveyData.qualitativeBreakdown,
+        score: surveyData.score,
+        percentage: surveyData.percentage,
+        technicalQuestions: technicalQuestions.map((q) => ({
+          level: q.level,
+          normalized: q.level?.toLowerCase(),
+        })),
+        qualitativeQuestions: qualitativeQuestions.map((q) => ({
+          level: q.level,
+          normalized: q.level?.toLowerCase(),
+        })),
+      });
 
       // Submit survey results using the existing API endpoint
       const response = await fetch("/api/survey", {
@@ -462,13 +760,32 @@ const SurveyPage = () => {
       if (response.ok) {
         console.log("Survey submitted successfully:", result);
 
-        // Updated success message to clarify scoring
-        const successMessage = `🎉 Assessment completed successfully!
+        // FIXED: Clear success message emphasizing technical-only scoring
+        const technicalAnswered = technicalQuestions.filter(
+          (q) => answers[q.id] !== undefined
+        ).length;
+        const qualitativeAnswered = qualitativeQuestions.filter(
+          (q) => answers[q.id] !== undefined
+        ).length;
 
-Technical Score: ${surveyData.percentage}% (${finalScore}/${technicalQuestionsCount} technical questions)
-Qualitative Questions: ${qualitativeQuestionsCount} completed for analysis
+        const successMessage = `🎉 Assessment Completed Successfully!
 
-Redirecting to your detailed results...`;
+📊 TECHNICAL SCORE: ${technicalPercentage}% (${finalScore}/${technicalQuestionsCount})
+   └── Only technical questions count toward your score
+
+📝 RESPONSE SUMMARY:
+   • Total Questions: ${surveyData.totalQuestions}
+   • Technical Questions: ${technicalQuestionsCount} (${technicalAnswered} answered)
+   • Qualitative Questions: ${qualitativeQuestionsCount} (${qualitativeAnswered} answered)
+   
+📈 DIFFICULTY BREAKDOWN:
+   • Technical (Scored): Easy ${questionsByLevel.easy}, Medium ${questionsByLevel.medium}, Advanced ${questionsByLevel.advanced}
+   • Qualitative (Analysis): Easy ${qualitativeBreakdown.easy}, Medium ${qualitativeBreakdown.medium}, Advanced ${qualitativeBreakdown.advanced}
+
+✅ All responses saved for analysis and career insights!
+
+Redirecting to detailed results...`;
+
         alert(successMessage);
 
         // Small delay to show the success message, then redirect
@@ -528,6 +845,9 @@ Redirecting to your detailed results...`;
 
   const validateCurrentQuestion = () => {
     const question = questions[currentQuestion];
+    if (!question) return true; // If no question, consider valid
+
+    // FIXED: Only validate if question is marked as required
     if (!question.required) return true;
 
     const answer = answers[question.id];
@@ -535,6 +855,14 @@ Redirecting to your detailed results...`;
 
     if (!isValid) {
       setValidationErrors((prev) => ({ ...prev, [question.id]: true }));
+      console.log(
+        `⚠️ Validation failed for question ${
+          question.id
+        }: ${question.question?.substring(0, 50)}`
+      );
+    } else {
+      // Clear validation error if answer is valid
+      setValidationErrors((prev) => ({ ...prev, [question.id]: false }));
     }
 
     return isValid;
@@ -561,7 +889,10 @@ Redirecting to your detailed results...`;
         ...prev,
         [currentQuestion]: timeSpentOnQuestion,
       }));
-      setCurrentQuestion((prev) => Math.min(prev + 1, questions.length - 1));
+
+      const newIndex = Math.min(currentQuestion + 1, questions.length - 1);
+      console.log(`➡️ Moving to question ${newIndex + 1}/${questions.length}`);
+      setCurrentQuestion(newIndex);
     }
   };
 
@@ -573,7 +904,10 @@ Redirecting to your detailed results...`;
       ...prev,
       [currentQuestion]: timeSpentOnQuestion,
     }));
-    setCurrentQuestion((prev) => Math.max(prev - 1, 0));
+
+    const newIndex = Math.max(currentQuestion - 1, 0);
+    console.log(`⬅️ Moving to question ${newIndex + 1}/${questions.length}`);
+    setCurrentQuestion(newIndex);
   };
 
   // Show loading screen while checking authentication, payment, profile, and survey status
@@ -640,6 +974,28 @@ Redirecting to your detailed results...`;
   if (questions.length > 0) {
     const currentQ = questions[currentQuestion];
 
+    // FIXED: Enhanced debug log for development
+    if (process.env.NODE_ENV === "development") {
+      const technicalScored = questions.filter(
+        (q) => !q.isQualitative && q.correctAnswer
+      );
+      const qualitativeAnalysis = questions.filter((q) => q.isQualitative);
+      const currentQ = questions[currentQuestion];
+
+      console.log(`📊 Survey Interface Debug:`, {
+        totalQuestions: questions.length,
+        currentQuestion: currentQuestion + 1,
+        technicalScored: technicalScored.length,
+        qualitativeAnalysis: qualitativeAnalysis.length,
+        answered: Object.keys(answers).length,
+        currentQuestionType: currentQ?.isQualitative
+          ? "Qualitative (Analysis)"
+          : "Technical (Scored)",
+        currentQuestionHasCorrectAnswer: !!currentQ?.correctAnswer,
+        currentQuestionLevel: currentQ?.level,
+      });
+    }
+
     return (
       <div
         className={`h-screen overflow-hidden flex flex-col ${
@@ -663,17 +1019,30 @@ Redirecting to your detailed results...`;
             getProgressBarColor={getProgressBarColor}
           />
 
-          {/* Assessment info - Updated to show scoring info */}
+          {/* FIXED: Clear assessment info showing scoring vs analysis separation */}
           <div
             className={`text-xs mb-2 flex justify-between ${
               isDark ? "text-gray-500" : "text-gray-500"
             }`}
           >
             <span>
-              Intent: {userIntent.intent} | Tech:{" "}
-              {questions.filter((q) => !q.isQualitative).length} (scored) |
-              Behavioral: {questions.filter((q) => q.isQualitative).length}{" "}
-              (analysis)
+              Intent: {userIntent.intent} | Total: {questions.length} |
+              <span className="text-green-600 font-medium">
+                {" "}
+                SCORED:{" "}
+                {
+                  questions.filter((q) => !q.isQualitative && q.correctAnswer)
+                    .length
+                }{" "}
+                technical
+              </span>{" "}
+              |
+              <span className="text-blue-600">
+                {" "}
+                ANALYSIS: {questions.filter((q) => q.isQualitative).length}{" "}
+                qualitative
+              </span>{" "}
+              | Progress: {currentQuestion + 1}/{questions.length}
             </span>
             {session?.user && <span>Taking as: {session.user.email}</span>}
           </div>
