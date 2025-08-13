@@ -19,6 +19,7 @@ import {
 } from "chart.js";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { useSession } from "next-auth/react";
 import Navbar from "./Navbar";
 
 // Register Chart.js components
@@ -144,15 +145,24 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isVisible, setIsVisible] = useState<boolean[]>([]);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   const reportRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<HTMLElement[]>([]);
+  const { data: session } = useSession();
 
   const isPassed = percentage >= 70;
 
   const technicalQuestionsOnly = detailedQuestions.filter(
     (q) => !q.isQualitative && q.countsTowardScore
   );
+
+  // Auto-populate email address when component loads
+  useEffect(() => {
+    if (session?.user?.email && !emailAddress) {
+      setEmailAddress(session.user.email);
+    }
+  }, [session, emailAddress]);
 
   // Handle scroll progress and section visibility
   useEffect(() => {
@@ -395,31 +405,544 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
     },
   };
 
+  //  PDF Export Function
+
+  const handlePDFClick = () => {
+    // Add safe print styles
+    const style = document.createElement("style");
+    style.textContent = `
+      @media print {
+        * { background: white !important; color: black !important; }
+        .fixed, .sticky, nav, button { display: none !important; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Trigger browser print dialog
+    window.print();
+
+    // Cleanup
+    setTimeout(() => document.head.removeChild(style), 1000);
+  };
+
+  // SIMPLE SOLUTION: Replace your entire exportToPDF function with this
   const exportToPDF = async () => {
-    const input = reportRef.current;
-    if (!input) return;
+    if (!reportRef.current) {
+      alert("Report content not found. Please try again.");
+      return;
+    }
 
     setIsExporting(true);
+
     try {
-      const canvas = await html2canvas(input, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: propIsDark ? "#111827" : "#ffffff",
+      // 1. Hide floating elements
+      const floatingSelectors = [
+        '[class*="fixed"]',
+        '[class*="sticky"]',
+        "nav",
+        ".floating-nav",
+      ];
+
+      const floatingElements = document.querySelectorAll(
+        floatingSelectors.join(", ")
+      );
+      const originalDisplays: string[] = [];
+
+      floatingElements.forEach((el, index) => {
+        const element = el as HTMLElement;
+        originalDisplays[index] = element.style.display;
+        element.style.display = "none";
       });
 
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = 210;
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      // 2. Add temporary CSS to fix modern colors
+      const tempStyle = document.createElement("style");
+      tempStyle.innerHTML = `
+      .pdf-temp * {
+        background-image: none !important;
+        background: ${propIsDark ? "#1f2937" : "#ffffff"} !important;
+        color: ${propIsDark ? "#e5e7eb" : "#374151"} !important;
+        border-color: ${propIsDark ? "#4b5563" : "#d1d5db"} !important;
+      }
+      .pdf-temp [class*="bg-gradient"] {
+        background: ${propIsDark ? "#374151" : "#f3f4f6"} !important;
+      }
+      .pdf-temp [class*="text-purple"], .pdf-temp [class*="text-cyan"] {
+        color: ${propIsDark ? "#a855f7" : "#8b5cf6"} !important;
+      }
+    `;
+      document.head.appendChild(tempStyle);
 
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(
-        `dhiti-assessment-${new Date().toISOString().split("T")[0]}.pdf`
-      );
+      // 3. Apply temp class
+      reportRef.current.classList.add("pdf-temp");
+
+      // 4. Wait for styles to apply
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // 5. Generate canvas with safe settings
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 1.2,
+        backgroundColor: propIsDark ? "#1f2937" : "#ffffff",
+        useCORS: true,
+        logging: false,
+        allowTaint: false,
+        // This is the key setting to avoid modern CSS issues
+        foreignObjectRendering: false,
+        ignoreElements: (element) => {
+          // Skip elements that might have problematic styles
+          return (
+            element.classList?.contains("fixed") ||
+            element.classList?.contains("sticky") ||
+            element.tagName === "STYLE"
+          );
+        },
+      });
+
+      // 6. Cleanup temporary styles
+      reportRef.current.classList.remove("pdf-temp");
+      document.head.removeChild(tempStyle);
+
+      // 7. Restore floating elements
+      floatingElements.forEach((el, index) => {
+        (el as HTMLElement).style.display = originalDisplays[index];
+      });
+
+      // 8. Create PDF
+      const imgData = canvas.toDataURL("image/jpeg", 0.8); // Use JPEG for better compatibility
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      // Calculate dimensions
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const scaledWidth = imgWidth * ratio;
+      const scaledHeight = imgHeight * ratio;
+
+      // Add pages as needed
+      let yPosition = 0;
+      const pageHeight = pdfHeight;
+
+      while (yPosition < scaledHeight) {
+        if (yPosition > 0) {
+          pdf.addPage();
+        }
+
+        pdf.addImage(
+          imgData,
+          "JPEG",
+          (pdfWidth - scaledWidth) / 2,
+          -yPosition,
+          scaledWidth,
+          scaledHeight
+        );
+
+        yPosition += pageHeight;
+      }
+
+      // 9. Save file
+      const fileName = `dhiti-assessment-${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
+      pdf.save(fileName);
+
+      alert("✅ PDF downloaded successfully!");
     } catch (error) {
-      console.error("Error generating PDF:", error);
+      console.error("PDF Export Error:", error);
+      let message = "Unknown error";
+      if (error instanceof Error) {
+        message = error.message;
+      } else if (typeof error === "string") {
+        message = error;
+      }
+      alert(`❌ PDF generation failed: ${message}`);
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  // USAGE: Replace your PDF button with this:
+  /*
+<button
+  onClick={exportToPDFNuclearOption}
+  disabled={isExporting}
+  className="px-6 py-3 bg-gray-800 text-white rounded-lg"
+>
+  {isExporting ? "Generating..." : "📄 Download PDF"}
+</button>
+*/
+
+  // Fixed Email Function
+  // SOLUTION 1: Replace your entire sendEmail function with this
+  const sendEmail = async () => {
+    if (!emailAddress || !emailAddress.includes("@")) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    if (!reportRef.current) {
+      alert("Report content not found. Please try again.");
+      return;
+    }
+
+    setIsSendingEmail(true);
+
+    try {
+      // Method 1: Try the nuclear CSS approach for PDF generation
+      let pdfBase64 = "";
+
+      try {
+        pdfBase64 = await generateCleanPDFForEmail();
+      } catch (canvasError) {
+        console.log("Canvas PDF failed, trying text-based email:", canvasError);
+        // Fallback to text-only email
+        await sendTextOnlyEmail();
+        return;
+      }
+
+      // Send email with PDF attachment
+      const emailResponse = await fetch("/api/emailResult", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          toEmail: emailAddress,
+          pdfBase64: pdfBase64,
+          userName: session?.user?.name || session?.user?.email || "User",
+          score: percentage,
+        }),
+      });
+
+      const result = await emailResponse.json();
+
+      if (emailResponse.ok) {
+        alert("✅ Assessment report sent successfully to your email!");
+        setShowEmailModal(false);
+        setEmailAddress(session?.user?.email || "");
+      } else {
+        throw new Error(result.message || "Failed to send email");
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      let errorMessage = "Unknown error";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+      alert(
+        `❌ Failed to send email: ${errorMessage}. Please try again later.`
+      );
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  // Helper function: Generate clean PDF for email (nuclear approach)
+  const generateCleanPDFForEmail = async (): Promise<string> => {
+    if (!reportRef.current) {
+      throw new Error("Report content not found");
+    }
+
+    // Create completely sanitized copy for email PDF
+    const originalElement = reportRef.current;
+    const cleanContainer = document.createElement("div");
+    cleanContainer.style.position = "absolute";
+    cleanContainer.style.left = "-9999px";
+    cleanContainer.style.top = "0";
+    cleanContainer.style.width = "800px"; // Fixed width for email
+    cleanContainer.style.backgroundColor = "#ffffff"; // Always white for email
+    cleanContainer.style.color = "#000000"; // Always black text for email
+    cleanContainer.style.fontFamily = "Arial, sans-serif";
+    cleanContainer.style.padding = "20px";
+    cleanContainer.style.lineHeight = "1.6";
+
+    // Clone and sanitize content
+    const clonedContent = originalElement.cloneNode(true) as HTMLElement;
+
+    const sanitizeForEmail = (element: HTMLElement) => {
+      // Remove ALL classes and problematic attributes
+      element.className = "";
+      element.removeAttribute("style");
+      element.removeAttribute("data-theme");
+
+      const tagName = element.tagName.toLowerCase();
+
+      // Apply email-safe styles
+      switch (tagName) {
+        case "h1":
+          element.style.fontSize = "24px";
+          element.style.fontWeight = "bold";
+          element.style.color = "#1a1a1a";
+          element.style.marginBottom = "16px";
+          element.style.borderBottom = "2px solid #e0e0e0";
+          element.style.paddingBottom = "8px";
+          break;
+        case "h2":
+          element.style.fontSize = "20px";
+          element.style.fontWeight = "bold";
+          element.style.color = "#2a2a2a";
+          element.style.marginBottom = "14px";
+          element.style.marginTop = "20px";
+          break;
+        case "h3":
+          element.style.fontSize = "18px";
+          element.style.fontWeight = "bold";
+          element.style.color = "#3a3a3a";
+          element.style.marginBottom = "12px";
+          element.style.marginTop = "16px";
+          break;
+        case "p":
+          element.style.color = "#4a4a4a";
+          element.style.marginBottom = "10px";
+          element.style.fontSize = "14px";
+          break;
+        case "div":
+          element.style.color = "#4a4a4a";
+          // Style container-like divs
+          if (element.children.length > 1) {
+            element.style.border = "1px solid #d0d0d0";
+            element.style.borderRadius = "6px";
+            element.style.padding = "12px";
+            element.style.marginBottom = "12px";
+            element.style.backgroundColor = "#f8f9fa";
+          }
+          break;
+        case "span":
+          element.style.color = "#4a4a4a";
+          // Highlight important spans
+          if (
+            element.textContent?.includes("%") ||
+            element.textContent?.includes("score")
+          ) {
+            element.style.fontWeight = "bold";
+            element.style.color = "#1f2937";
+          }
+          break;
+        case "button":
+        case "svg":
+        case "canvas":
+          element.style.display = "none";
+          break;
+      }
+
+      // Process children
+      Array.from(element.children).forEach((child) => {
+        sanitizeForEmail(child as HTMLElement);
+      });
+    };
+
+    sanitizeForEmail(clonedContent);
+    cleanContainer.appendChild(clonedContent);
+    document.body.appendChild(cleanContainer);
+
+    // Wait for layout
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    try {
+      // Generate canvas with safe settings
+      const canvas = await html2canvas(cleanContainer, {
+        scale: 1.5,
+        backgroundColor: "#ffffff",
+        logging: false,
+        useCORS: false,
+        allowTaint: true,
+        foreignObjectRendering: false,
+      });
+
+      // Remove temp container
+      document.body.removeChild(cleanContainer);
+
+      // Create PDF
+      const imgData = canvas.toDataURL("image/jpeg", 0.85);
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const scaledWidth = imgWidth * ratio;
+      const scaledHeight = imgHeight * ratio;
+
+      let position = 0;
+      while (position < scaledHeight) {
+        if (position > 0) pdf.addPage();
+
+        pdf.addImage(
+          imgData,
+          "JPEG",
+          (pdfWidth - scaledWidth) / 2,
+          0 - position,
+          scaledWidth,
+          scaledHeight
+        );
+
+        position += pdfHeight;
+      }
+
+      return pdf.output("datauristring");
+    } catch (error) {
+      document.body.removeChild(cleanContainer);
+      throw error;
+    }
+  };
+
+  // Fallback: Text-only email function
+  const sendTextOnlyEmail = async () => {
+    if (!reportRef.current) return;
+
+    // Extract text content and format it nicely
+    const textContent = extractFormattedText(reportRef.current);
+
+    const emailResponse = await fetch("/api/emailResult", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        toEmail: emailAddress,
+        textContent: textContent, // Send text instead of PDF
+        userName: session?.user?.name || session?.user?.email || "User",
+        score: percentage,
+        isTextOnly: true, // Flag to indicate text-only email
+      }),
+    });
+
+    const result = await emailResponse.json();
+
+    if (emailResponse.ok) {
+      alert("✅ Assessment report sent as text to your email!");
+      setShowEmailModal(false);
+      setEmailAddress(session?.user?.email || "");
+    } else {
+      throw new Error(result.message || "Failed to send text email");
+    }
+  };
+
+  // Helper: Extract and format text content
+  const extractFormattedText = (element: HTMLElement): string => {
+    const sections: string[] = [];
+
+    // Add header
+    sections.push("DHITI ASSESSMENT REPORT");
+    sections.push("=" + "=".repeat(25));
+    sections.push("");
+
+    // Add score summary
+    sections.push(`SCORE SUMMARY:`);
+    sections.push(
+      `Technical Score: ${percentage}% (${score}/${totalQuestions})`
+    );
+    sections.push(
+      `Questions Attempted: ${questionsAttempted}/${allQuestionsCount}`
+    );
+    sections.push(`Time Spent: ${formatTime(timeUsed)}`);
+    sections.push("");
+
+    // Add intent if available
+    if (intent) {
+      const intentDisplay = getIntentDisplay();
+      sections.push(`CAREER INTENT: ${intentDisplay.label}`);
+      if (intentConfidence > 0) {
+        sections.push(`Confidence: ${Math.round(intentConfidence * 100)}%`);
+      }
+      sections.push("");
+    }
+
+    // Add reasoning if available
+    if (reasoning) {
+      sections.push("ANALYSIS:");
+      sections.push(reasoning);
+      sections.push("");
+    }
+
+    // Add target roles
+    if (targetRoles.length > 0) {
+      sections.push("RECOMMENDED ROLES:");
+      targetRoles.forEach((role, index) => {
+        sections.push(`${index + 1}. ${role}`);
+      });
+      sections.push("");
+    }
+
+    // Add skill gaps
+    if (skillGaps.length > 0) {
+      sections.push("SKILL GAPS TO ADDRESS:");
+      skillGaps.forEach((gap, index) => {
+        sections.push(`• ${gap}`);
+      });
+      sections.push("");
+    }
+
+    // Add learning path
+    if (suggestedLearningPath.length > 0) {
+      sections.push("SUGGESTED LEARNING PATH:");
+      suggestedLearningPath.forEach((step, index) => {
+        sections.push(`${index + 1}. ${step}`);
+      });
+      sections.push("");
+    }
+
+    // Add footer
+    sections.push("");
+    sections.push("Generated by DHITI Assessment Platform");
+    sections.push(`Date: ${new Date().toLocaleDateString()}`);
+
+    return sections.join("\n");
+  };
+
+  // ALTERNATIVE SOLUTION 2: Simplified email with print instruction
+  const sendSimpleEmail = async () => {
+    if (!emailAddress || !emailAddress.includes("@")) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    setIsSendingEmail(true);
+
+    try {
+      const emailResponse = await fetch("/api/emailResult", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          toEmail: emailAddress,
+          userName: session?.user?.name || session?.user?.email || "User",
+          score: percentage,
+          isSimple: true, // Send simple email with instructions
+          reportUrl: window.location.href, // Include current URL
+        }),
+      });
+
+      const result = await emailResponse.json();
+
+      if (emailResponse.ok) {
+        alert("✅ Email sent with instructions to access your report!");
+        setShowEmailModal(false);
+        setEmailAddress(session?.user?.email || "");
+      } else {
+        throw new Error(result.message || "Failed to send email");
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      let message = "Unknown error";
+      if (error instanceof Error) {
+        message = error.message;
+      } else if (typeof error === "string") {
+        message = error;
+      }
+      alert(`❌ Failed to send email: ${message}`);
+    } finally {
+      setIsSendingEmail(false);
     }
   };
 
@@ -444,15 +967,17 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
     >
       {/* Fixed Navbar with working theme toggle */}
       <Navbar isDark={propIsDark} toggleTheme={propToggleTheme} />
-
       {/* Progress Bar */}
-      <div className="fixed top-16 left-0 right-0 h-1 bg-gray-800 z-40">
+      <div
+        className={`fixed top-16 left-0 right-0 h-1 z-[90] ${
+          propIsDark ? "bg-gray-800" : "bg-gray-200"
+        }`}
+      >
         <div
           className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 transition-all duration-300"
           style={{ width: `${scrollProgress}%` }}
         />
       </div>
-
       {/* Floating Side Navigation */}
       <div className="fixed left-8 top-1/2 -translate-y-1/2 z-30 hidden lg:block">
         <div
@@ -500,7 +1025,6 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
           ))}
         </div>
       </div>
-
       <div className="max-w-6xl mx-auto px-4 lg:px-8">
         <div ref={reportRef}>
           {/* Section 1: Hero Score */}
@@ -1551,7 +2075,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
         {/* Floating Action Buttons */}
         <div className="fixed bottom-8 right-8 flex flex-col gap-3 z-30">
           <button
-            onClick={exportToPDF}
+            onClick={handlePDFClick}
             disabled={isExporting}
             className={`px-6 py-3 ${
               propIsDark ? "bg-gray-800" : "bg-white"
@@ -1594,12 +2118,13 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
           </button>
         </div>
       </div>
-
       {/* Email Modal */}
+      // Replace your email modal section with this improved version
+      {/* Improved Email Modal with Multiple Options */}
       {showEmailModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
           <div
-            className={`max-w-md w-full p-8 ${
+            className={`max-w-lg w-full p-8 ${
               propIsDark ? "bg-gray-800" : "bg-white"
             } rounded-3xl shadow-2xl`}
           >
@@ -1608,44 +2133,184 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
                 propIsDark ? "text-white" : "text-gray-900"
               }`}
             >
-              Email Your Report
+              📧 Email Your Report
             </h3>
-            <input
-              type="email"
-              value={emailAddress}
-              onChange={(e) => setEmailAddress(e.target.value)}
-              placeholder="Enter your email address"
-              className={`w-full px-4 py-3 ${
-                propIsDark
-                  ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                  : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500"
-              } border rounded-xl focus:outline-none focus:border-purple-500 transition-all mb-6`}
-            />
+
+            <div className="space-y-4 mb-6">
+              <input
+                type="email"
+                value={emailAddress}
+                onChange={(e) => setEmailAddress(e.target.value)}
+                placeholder="Enter your email address"
+                className={`w-full px-4 py-3 ${
+                  propIsDark
+                    ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                    : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500"
+                } border rounded-xl focus:outline-none focus:border-purple-500 transition-all`}
+              />
+
+              <div
+                className={`text-sm ${
+                  propIsDark ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Choose how you'd like to receive your report:
+              </div>
+            </div>
+
+            {/* Email Options */}
+            <div className="space-y-3 mb-6">
+              {/* Option 1: PDF Attachment (with fallback) */}
+              <button
+                onClick={sendEmail}
+                disabled={!emailAddress || isSendingEmail}
+                className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-cyan-500 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-between group hover:from-purple-600 hover:to-cyan-600"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">📄</span>
+                  <div className="text-left">
+                    <div className="font-semibold">PDF Report</div>
+                    <div className="text-xs opacity-90">
+                      Full report as PDF attachment
+                    </div>
+                  </div>
+                </div>
+                {isSendingEmail && (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                )}
+              </button>
+
+              {/* Option 2: Text Version */}
+              <button
+                onClick={sendTextOnlyEmail}
+                disabled={!emailAddress || isSendingEmail}
+                className={`w-full px-6 py-4 ${
+                  propIsDark
+                    ? "bg-gray-700 hover:bg-gray-600 border-gray-600"
+                    : "bg-gray-100 hover:bg-gray-200 border-gray-300"
+                } border rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-between`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">📝</span>
+                  <div className="text-left">
+                    <div
+                      className={`font-semibold ${
+                        propIsDark ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      Text Version
+                    </div>
+                    <div
+                      className={`text-xs ${
+                        propIsDark ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      Report content as formatted text
+                    </div>
+                  </div>
+                </div>
+              </button>
+
+              {/* Option 3: Simple Email with Instructions */}
+              <button
+                onClick={sendSimpleEmail}
+                disabled={!emailAddress || isSendingEmail}
+                className={`w-full px-6 py-4 ${
+                  propIsDark
+                    ? "bg-gray-700 hover:bg-gray-600 border-gray-600"
+                    : "bg-gray-100 hover:bg-gray-200 border-gray-300"
+                } border rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-between`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">🔗</span>
+                  <div className="text-left">
+                    <div
+                      className={`font-semibold ${
+                        propIsDark ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      Access Link
+                    </div>
+                    <div
+                      className={`text-xs ${
+                        propIsDark ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      Email with link and print instructions
+                    </div>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            {/* Status Messages */}
+            {isSendingEmail && (
+              <div
+                className={`text-center p-4 rounded-xl ${
+                  propIsDark
+                    ? "bg-blue-900/20 text-blue-300"
+                    : "bg-blue-50 text-blue-700"
+                } mb-4`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                  <span>Sending your report...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
             <div className="flex gap-3">
               <button
                 onClick={() => {
-                  /* Email logic */
+                  setShowEmailModal(false);
+                  setEmailAddress(session?.user?.email || "");
                 }}
-                disabled={!emailAddress || isExporting}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-cyan-500 text-white rounded-xl font-medium disabled:opacity-50 transition-all"
-              >
-                Send Report
-              </button>
-              <button
-                onClick={() => setShowEmailModal(false)}
-                className={`px-6 py-3 ${
+                disabled={isSendingEmail}
+                className={`flex-1 px-6 py-3 ${
                   propIsDark
-                    ? "bg-gray-700 hover:bg-gray-600"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } rounded-xl font-medium transition-all`}
+                    ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                } rounded-xl font-medium transition-all disabled:opacity-50`}
               >
                 Cancel
               </button>
+
+              {/* Quick Print Option */}
+              <button
+                onClick={() => {
+                  setShowEmailModal(false);
+                  // Trigger print dialog
+                  setTimeout(() => {
+                    const style = document.createElement("style");
+                    style.textContent = `@media print { * { background: white !important; color: black !important; } .fixed, .sticky, nav, button { display: none !important; } }`;
+                    document.head.appendChild(style);
+                    window.print();
+                    setTimeout(() => document.head.removeChild(style), 1000);
+                  }, 100);
+                }}
+                disabled={isSendingEmail}
+                className={`px-6 py-3 ${
+                  propIsDark
+                    ? "bg-purple-700 hover:bg-purple-600 text-white"
+                    : "bg-purple-100 hover:bg-purple-200 text-purple-700"
+                } rounded-xl font-medium transition-all disabled:opacity-50 flex items-center gap-2`}
+              >
+                🖨️ Print Now
+              </button>
+            </div>
+
+            {/* Help Text */}
+            <div
+              className={`text-xs mt-4 text-center ${
+                propIsDark ? "text-gray-500" : "text-gray-400"
+              }`}
+            >
+              Having trouble? Try the "Print Now" option or contact support.
             </div>
           </div>
         </div>
       )}
-
       <style jsx>{`
         @keyframes fadeInUp {
           from {

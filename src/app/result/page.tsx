@@ -75,7 +75,16 @@ const ResultPage: React.FC = () => {
   const [result, setResult] = useState<SurveyResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-  const [isDark] = useState<boolean>(true); // Keeping dark theme for DHITI brand
+
+  // ✅ Fix: Make isDark a proper state that can be toggled
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    // Initialize from localStorage if available, otherwise default to dark
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("dhiti-theme");
+      return saved ? JSON.parse(saved) : true;
+    }
+    return true;
+  });
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -86,8 +95,15 @@ const ResultPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
+  // ✅ Fix: Implement proper theme toggle function with localStorage persistence
   const toggleTheme = () => {
-    // Keep dark theme for consistency with DHITI brand
+    setIsDark((prevIsDark) => {
+      const newTheme = !prevIsDark;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("dhiti-theme", JSON.stringify(newTheme));
+      }
+      return newTheme;
+    });
   };
 
   const normalizeQuestionsByLevel = (levelData: any) => {
