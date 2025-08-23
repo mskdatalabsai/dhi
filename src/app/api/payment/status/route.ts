@@ -7,6 +7,15 @@ import { authOptions } from "../../../lib/auth";
 import { firestoreDb } from "../../../lib/firebase/db-service";
 import adminDb from "../../../lib/firebase/admin";
 
+interface RegionData {
+  country: string;
+  currency: string;
+  amount: number;
+  amountInPaise: number;
+  symbol: string;
+  isIndia: boolean;
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Get user session
@@ -50,7 +59,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = body;
+    const {
+      razorpay_payment_id,
+      razorpay_order_id,
+      razorpay_signature,
+      regionData,
+    } = body;
 
     if (!razorpay_payment_id) {
       return NextResponse.json(
@@ -59,15 +73,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate region data
+    if (!regionData || !regionData.currency || !regionData.amount) {
+      return NextResponse.json(
+        { error: "Missing region data" },
+        { status: 400 }
+      );
+    }
+
     const userEmail = session.user.email;
     const userId = session.user.id || session.user.email;
 
-    // Record payment in Firebase
-    const success = await recordPayment(userEmail, userId, {
-      razorpay_payment_id,
-      razorpay_order_id,
-      razorpay_signature,
-    });
+    // Record payment in Firebase with region info
+    const success = await recordPayment(
+      userEmail,
+      userId,
+      {
+        razorpay_payment_id,
+        razorpay_order_id,
+        razorpay_signature,
+      },
+      regionData
+    );
 
     if (success) {
       return NextResponse.json({
@@ -128,37 +155,53 @@ async function recordPayment(
     razorpay_payment_id: string;
     razorpay_order_id?: string;
     razorpay_signature?: string;
-  }
+  },
+  regionData: RegionData
 ): Promise<boolean> {
   try {
     const now = new Date();
 
-    // 1. Create payment record
+    // 1. Create payment record with region data
     await adminDb.collection("payments").add({
       userEmail,
       userId,
       paymentId: paymentData.razorpay_payment_id,
       orderId: paymentData.razorpay_order_id || "",
       signature: paymentData.razorpay_signature || "",
-      amount: 99,
-      currency: "INR",
+      // Regional payment info
+      amount: regionData.amount,
+      currency: regionData.currency,
+      amountInSmallestUnit: regionData.amountInPaise, // paise for INR, cents for USD
+      region: {
+        country: regionData.country,
+        currency: regionData.currency,
+        symbol: regionData.symbol,
+        isIndia: regionData.isIndia,
+      },
       status: "completed",
       createdAt: now,
       updatedAt: now,
     });
 
-    // 2. Update user document to mark as paid
+    // 2. Update user document to mark as paid with region info
     const user = await firestoreDb.users.findByEmail(userEmail);
     if (user?.id) {
       await firestoreDb.users.update(user.id, {
         hasPaid: true,
         paymentDate: now,
         paymentId: paymentData.razorpay_payment_id,
+        // Store payment region info
+        paymentRegion: {
+          country: regionData.country,
+          currency: regionData.currency,
+          amount: regionData.amount,
+          symbol: regionData.symbol,
+        },
       } as any); // Type assertion for custom properties
     }
 
     console.log(
-      `✅ Payment recorded for ${userEmail}: ${paymentData.razorpay_payment_id}`
+      `✅ Payment recorded for ${userEmail}: ${regionData.currency} ${regionData.symbol}${regionData.amount} (${paymentData.razorpay_payment_id})`
     );
     return true;
   } catch (error) {

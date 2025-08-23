@@ -1,40 +1,60 @@
 "use client";
-
-import React, { useState, useEffect } from "react";
-import Navbar from "../components/Navbar";
+import React, { useState } from "react";
 import {
-  Target,
-  TrendingUp,
   Brain,
-  Users,
-  Zap,
-  Globe,
+  Sparkles,
+  Rocket,
   ArrowRight,
+  User,
+  Building2,
+  GraduationCap,
+  Compass,
 } from "lucide-react";
+import Navbar from "@/components/Navbar";
 
 const AboutUsPage = () => {
   const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      setIsDark(savedTheme === "dark");
-    } else {
-      setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
-    }
-  }, []);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleTheme = () => {
-    const newTheme = !isDark;
-    setIsDark(newTheme);
-    localStorage.setItem("theme", newTheme ? "dark" : "light");
+    setIsDark(!isDark);
   };
 
-  const stats = [
-    { icon: TrendingUp, number: "19M", label: "New Jobs by 2030" },
-    { icon: Users, number: "60%", label: "Workforce Needs Upskilling" },
-    { icon: Zap, number: "9M", label: "Jobs Being Displaced" },
-    { icon: Globe, number: "2025", label: "The AI Revolution Year" },
+  const differentiators = [
+    {
+      icon: Brain,
+      title: "Science + AI Fusion",
+      description:
+        "We combine validated psychometric methods with advanced AI algorithms.",
+      color: "purple",
+    },
+    {
+      icon: User,
+      title: "Personalized Insights",
+      description:
+        "Every recommendation is tailored to your strengths, passions, and market trends.",
+      color: "teal",
+    },
+    {
+      icon: Rocket,
+      title: "Future-Proof Careers",
+      description:
+        "We align you with IT roles that aren't just relevant today, but will lead tomorrow.",
+      color: "purple",
+    },
+    {
+      icon: GraduationCap,
+      title: "Mentorship & Growth",
+      description:
+        "Beyond assessments, we connect you with mentors, roadmaps, and learning paths to help you thrive.",
+      color: "teal",
+    },
+  ];
+
+  const experienceLogos = [
+    { name: "GE", icon: Building2 },
+    { name: "Oracle", icon: Building2 },
+    { name: "TCS", icon: Building2 },
   ];
 
   return (
@@ -43,317 +63,386 @@ const AboutUsPage = () => {
         isDark ? "bg-gray-900" : "bg-gray-50"
       }`}
     >
-      <Navbar isDark={isDark} toggleTheme={toggleTheme} />
+      <Navbar
+        isDark={false}
+        toggleTheme={function (): void {
+          throw new Error("Function not implemented.");
+        }}
+      />
 
       {/* Main Content */}
-      <div className="container mx-auto px-6 pt-32 pb-16 max-w-6xl">
+      <div className="pt-20">
         {/* Hero Section */}
-        <div className="text-center mb-20">
-          <h1
-            className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 ${
-              isDark ? "text-white" : "text-gray-900"
-            }`}
-          >
-            About{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
-              DHITI.AI
-            </span>
-          </h1>
-          <p
-            className={`text-xl leading-relaxed max-w-3xl mx-auto ${
-              isDark ? "text-gray-300" : "text-gray-600"
-            }`}
-          >
-            Pioneering the future of IT career guidance through the power of
-            Generative AI
-          </p>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-24">
-          {stats.map((stat, index) => (
-            <div
-              key={index}
-              className={`text-center p-6 rounded-xl border ${
-                isDark
-                  ? "bg-gray-800 border-gray-700"
-                  : "bg-white border-gray-200"
-              } shadow-sm hover:shadow-lg transition-all duration-300`}
-            >
-              <stat.icon
-                className={`w-8 h-8 mx-auto mb-4 ${
-                  index % 2 === 0 ? "text-purple-600" : "text-teal-600"
-                }`}
-              />
-              <div className="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
-                {stat.number}
-              </div>
-              <div
-                className={`text-sm ${
-                  isDark ? "text-gray-400" : "text-gray-600"
+        <section className="relative py-20 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-transparent to-teal-600/10"></div>
+          <div className="container mx-auto px-6 relative">
+            <div className="text-center max-w-4xl mx-auto">
+              <h1
+                className={`text-5xl md:text-6xl lg:text-7xl font-bold mb-6 ${
+                  isDark ? "text-white" : "text-gray-900"
                 }`}
               >
-                {stat.label}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Background Section */}
-        <div className="mb-24">
-          <div
-            className={`rounded-2xl p-8 md:p-12 border ${
-              isDark
-                ? "bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700"
-                : "bg-gradient-to-br from-white to-gray-50 border-gray-200"
-            } shadow-lg`}
-          >
-            <div className="flex items-start mb-8">
-              <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-purple-500 to-teal-500 rounded-xl flex items-center justify-center mr-6">
-                <Brain className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2
-                  className={`text-3xl md:text-4xl font-bold mb-4 ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Revolutionizing IT Career Guidance
-                </h2>
-                <div className="w-24 h-1 bg-gradient-to-r from-purple-600 to-teal-600 rounded"></div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div
-                className={`text-lg leading-relaxed ${
-                  isDark ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                <p className="mb-6">
-                  In 2025, as{" "}
-                  <span className="font-semibold text-purple-600">
-                    Generative AI
-                  </span>{" "}
-                  and{" "}
-                  <span className="font-semibold text-teal-600">
-                    Agentic AI
-                  </span>{" "}
-                  reshape traditional career paths and unlock new opportunities
-                  in unstructured data and ethical AI, the technology landscape
-                  demands a new approach to career development.
-                </p>
-
-                <p className="mb-6">
-                  The{" "}
-                  <span className="font-semibold text-purple-600">
-                    skills gap is widening
-                  </span>
-                  , with projections indicating{" "}
-                  <span className="font-bold text-teal-600">
-                    19 million new jobs by 2030
-                  </span>{" "}
-                  but also the displacement of 9 million existing ones,
-                  necessitating significant upskilling for an estimated 60% of
-                  the global workforce.
-                </p>
-              </div>
-
-              <div
-                className={`p-6 rounded-xl border-l-4 border-purple-500 ${
-                  isDark ? "bg-purple-900/20" : "bg-purple-50"
-                }`}
-              >
-                <p
-                  className={`text-lg leading-relaxed ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Recognizing this critical need, we developed the world&apos;s
-                  first{" "}
-                  <span className="font-bold text-purple-600">
-                    AI-driven IT Career Recommender
-                  </span>
-                  . Our proprietary AI moves beyond generic assessments, deeply
-                  analyzing individuals&apos;{" "}
-                  <span className="font-semibold text-teal-600">
-                    interests, values, &amp; unique motivations
-                  </span>{" "}
-                  to connect them with IT roles and learning paths where their
-                  passion is the driving force for unparalleled success and job
-                  satisfaction.
-                </p>
-              </div>
-
-              <div className="flex items-center pt-4">
-                <ArrowRight className="w-5 h-5 text-teal-600 mr-3" />
-                <p
-                  className={`text-lg font-medium ${
-                    isDark ? "text-gray-200" : "text-gray-800"
-                  }`}
-                >
-                  We&apos;re building a future where careers are a lifelong
-                  pursuit aligned with personal purpose, ensuring individuals
-                  are not just ready for the future, but{" "}
-                  <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
-                    leading it
-                  </span>
-                  .
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Objective Section */}
-        <div className="mb-24">
-          <div
-            className={`rounded-2xl p-8 md:p-12 border ${
-              isDark
-                ? "bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700"
-                : "bg-gradient-to-br from-white to-gray-50 border-gray-200"
-            } shadow-lg`}
-          >
-            <div className="flex items-start mb-8">
-              <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-teal-500 to-purple-500 rounded-xl flex items-center justify-center mr-6">
-                <Target className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2
-                  className={`text-3xl md:text-4xl font-bold mb-4 ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Our Objective
-                </h2>
-                <h3 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-purple-600 mb-4">
-                  Empowering Passion-Driven IT Careers
-                </h3>
-                <div className="w-24 h-1 bg-gradient-to-r from-teal-600 to-purple-600 rounded"></div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
+                About{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
+                  DHITI.AI
+                </span>
+              </h1>
               <p
-                className={`text-lg leading-relaxed ${
+                className={`text-xl md:text-2xl leading-relaxed ${
+                  isDark ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                Discover Heuristic Insights Through Intelligence
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Who We Are Section */}
+        <section className="py-16">
+          <div className="container mx-auto px-6 max-w-6xl">
+            <div
+              className={`rounded-3xl p-8 md:p-12 ${
+                isDark
+                  ? "bg-gradient-to-br from-gray-800 to-gray-850"
+                  : "bg-white"
+              } shadow-2xl border ${
+                isDark ? "border-gray-700" : "border-gray-100"
+              }`}
+            >
+              <div className="flex items-center mb-8">
+                <div className="w-14 h-14 bg-gradient-to-r from-purple-600 to-teal-600 rounded-xl flex items-center justify-center mr-4">
+                  <Sparkles className="w-7 h-7 text-white" />
+                </div>
+                <h2
+                  className={`text-3xl md:text-4xl font-bold ${
+                    isDark ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  Who We Are
+                </h2>
+              </div>
+
+              <p
+                className={`text-lg md:text-xl leading-relaxed ${
                   isDark ? "text-gray-300" : "text-gray-700"
                 }`}
               >
-                Our objective is to empower individuals to navigate the dynamic
-                2025 technology landscape by aligning their deepest passions
-                with the most impactful IT career opportunities &amp; essential
-                skill development.
+                At{" "}
+                <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
+                  Dhiti.AI
+                </span>
+                , we believe careers should be shaped by{" "}
+                <span className="font-semibold text-purple-600">passion</span>,{" "}
+                <span className="font-semibold text-teal-600">potential</span>,
+                and{" "}
+                <span className="font-semibold text-purple-600">precision</span>
+                , not just by chance. Our mission is to help individuals,
+                students, and career switchers discover the{" "}
+                <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
+                  IT role they were truly meant to do
+                </span>
+                , using the power of{" "}
+                <span className="font-semibold">
+                  AI-driven assessments and personalized insights
+                </span>
+                .
               </p>
+            </div>
+          </div>
+        </section>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div
-                  className={`p-6 rounded-xl border-l-4 border-teal-500 ${
-                    isDark ? "bg-teal-900/20" : "bg-teal-50"
-                  }`}
-                >
-                  <h4
-                    className={`font-semibold mb-3 ${
+        {/* Founder's Story Section */}
+        <section className="py-16">
+          <div className="container mx-auto px-6 max-w-6xl">
+            <div
+              className={`rounded-3xl overflow-hidden ${
+                isDark
+                  ? "bg-gradient-to-br from-purple-900/30 to-teal-900/30"
+                  : "bg-gradient-to-br from-purple-50 to-teal-50"
+              } shadow-2xl border ${
+                isDark ? "border-purple-500/30" : "border-purple-200/50"
+              }`}
+            >
+              <div className="p-8 md:p-12">
+                <div className="flex items-center mb-8">
+                  <div className="w-14 h-14 bg-gradient-to-r from-teal-600 to-purple-600 rounded-xl flex items-center justify-center mr-4">
+                    <User className="w-7 h-7 text-white" />
+                  </div>
+                  <h2
+                    className={`text-3xl md:text-4xl font-bold ${
                       isDark ? "text-white" : "text-gray-900"
                     }`}
                   >
-                    Personalized Guidance
-                  </h4>
+                    Our Founder's Story
+                  </h2>
+                </div>
+
+                <div className="space-y-6">
                   <p
-                    className={`text-sm leading-relaxed ${
-                      isDark ? "text-gray-300" : "text-gray-600"
+                    className={`text-lg leading-relaxed ${
+                      isDark ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
-                    We aim to be the definitive platform for{" "}
+                    Dhiti.AI was founded by a{" "}
+                    <span className="font-bold text-purple-600">
+                      data scientist with over 15 years of experience
+                    </span>{" "}
+                    in Artificial Intelligence and Data Science, working with
+                    global leaders like:
+                  </p>
+
+                  {/* Company Logos */}
+                  <div className="flex flex-wrap gap-6 my-8">
+                    {experienceLogos.map((company, index) => (
+                      <div
+                        key={index}
+                        className={`flex items-center space-x-2 px-6 py-3 rounded-lg ${
+                          isDark ? "bg-gray-800/50" : "bg-white"
+                        } shadow-md`}
+                      >
+                        <company.icon className="w-5 h-5 text-purple-600" />
+                        <span
+                          className={`font-bold text-lg ${
+                            isDark ? "text-gray-200" : "text-gray-800"
+                          }`}
+                        >
+                          {company.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p
+                    className={`text-lg leading-relaxed ${
+                      isDark ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Having spent years at the intersection of{" "}
                     <span className="font-semibold text-teal-600">
-                      personalized IT career guidance
+                      cutting-edge AI research
+                    </span>{" "}
+                    and{" "}
+                    <span className="font-semibold text-purple-600">
+                      real-world enterprise solutions
                     </span>
-                    , leveraging advanced{" "}
-                    <span className="font-semibold text-purple-600">
-                      Generative AI algorithms
-                    </span>{" "}
-                    to recommend ideal roles and tailored learning paths.
+                    , he has seen firsthand how technology transforms industries
+                    and how individuals often struggle to find their{" "}
+                    <span className="font-bold">right place within it</span>.
                   </p>
-                </div>
 
-                <div
-                  className={`p-6 rounded-xl border-l-4 border-purple-500 ${
-                    isDark ? "bg-purple-900/20" : "bg-purple-50"
-                  }`}
-                >
-                  <h4
-                    className={`font-semibold mb-3 ${
-                      isDark ? "text-white" : "text-gray-900"
-                    }`}
-                  >
-                    Skills &amp; Fulfillment
-                  </h4>
                   <p
-                    className={`text-sm leading-relaxed ${
-                      isDark ? "text-gray-300" : "text-gray-600"
+                    className={`text-lg leading-relaxed ${
+                      isDark ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
-                    By focusing on what truly motivates individuals, we seek to
-                    close the widening skills gap and cultivate a workforce that
-                    is highly skilled in areas like{" "}
-                    <span className="font-semibold text-purple-600">
-                      AI, Big Data, &amp; cybersecurity
+                    Beyond corporate experience, he is deeply passionate about{" "}
+                    <span className="font-semibold text-teal-600">
+                      training and mentoring the next generation
                     </span>{" "}
-                    but also deeply fulfilled.
+                    of AI and data science professionals. This passion led to
+                    the creation of <span className="font-bold">Dhiti.AI</span>,
+                    a platform that combines{" "}
+                    <span className="font-semibold text-purple-600">
+                      psychometric science
+                    </span>
+                    ,{" "}
+                    <span className="font-semibold text-teal-600">
+                      heuristic insights
+                    </span>
+                    , and{" "}
+                    <span className="font-semibold text-purple-600">
+                      machine learning
+                    </span>{" "}
+                    to make career discovery{" "}
+                    <span className="font-bold">
+                      smarter, faster, and more accurate
+                    </span>
+                    .
                   </p>
                 </div>
-              </div>
-
-              <div className="flex items-center pt-4">
-                <ArrowRight className="w-5 h-5 text-purple-600 mr-3" />
-                <p
-                  className={`text-lg font-medium ${
-                    isDark ? "text-gray-200" : "text-gray-800"
-                  }`}
-                >
-                  Transforming jobs into{" "}
-                  <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-purple-600">
-                    purpose-driven pursuits
-                  </span>
-                  .
-                </p>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Call to Action */}
-        <div className="text-center">
-          <div
-            className={`rounded-2xl p-8 md:p-12 border ${
-              isDark
-                ? "bg-gradient-to-r from-purple-900/30 to-teal-900/30 border-purple-500/30"
-                : "bg-gradient-to-r from-purple-50 to-teal-50 border-purple-200/50"
-            } shadow-lg`}
-          >
-            <h3
-              className={`text-2xl md:text-3xl font-bold mb-6 ${
-                isDark ? "text-white" : "text-gray-900"
+        {/* Our Vision Section */}
+        <section className="py-16">
+          <div className="container mx-auto px-6 max-w-6xl">
+            <div
+              className={`rounded-3xl p-8 md:p-12 ${
+                isDark
+                  ? "bg-gradient-to-br from-gray-800 to-gray-850"
+                  : "bg-white"
+              } shadow-2xl border ${
+                isDark ? "border-gray-700" : "border-gray-100"
               }`}
             >
-              Ready to Discover Your IT Career Path?
-            </h3>
-            <p
-              className={`text-lg leading-relaxed max-w-3xl mx-auto mb-8 ${
-                isDark ? "text-gray-300" : "text-gray-600"
-              }`}
-            >
-              Join thousands of professionals who have already transformed their
-              careers with our AI-powered platform.
-            </p>
-            <button
-              onClick={() => (window.location.href = "/payment")}
-              className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-purple-600 to-teal-600 text-white text-lg font-semibold rounded-xl hover:from-purple-700 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              Start Your Assessment
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </button>
+              <div className="flex items-center mb-8">
+                <div className="w-14 h-14 bg-gradient-to-r from-purple-600 to-teal-600 rounded-xl flex items-center justify-center mr-4">
+                  <Compass className="w-7 h-7 text-white" />
+                </div>
+                <h2
+                  className={`text-3xl md:text-4xl font-bold ${
+                    isDark ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  Our Vision
+                </h2>
+              </div>
+
+              <p
+                className={`text-lg md:text-xl leading-relaxed ${
+                  isDark ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
+                To become the{" "}
+                <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
+                  go-to AI-powered career compass
+                </span>{" "}
+                for anyone exploring or advancing in IT, helping millions make{" "}
+                <span className="font-semibold text-purple-600">confident</span>
+                ,{" "}
+                <span className="font-semibold text-teal-600">
+                  informed decisions
+                </span>{" "}
+                about their future.
+              </p>
+            </div>
           </div>
-        </div>
+        </section>
+
+        {/* What Makes Dhiti Different Section */}
+        <section className="py-16">
+          <div className="container mx-auto px-6 max-w-6xl">
+            <div className="text-center mb-12">
+              <h2
+                className={`text-3xl md:text-4xl font-bold mb-4 ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                What Makes{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
+                  Dhiti Different?
+                </span>
+              </h2>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {differentiators.map((item, index) => (
+                <div
+                  key={index}
+                  className={`group relative rounded-2xl p-8 transition-all duration-300 hover:scale-105 ${
+                    isDark ? "bg-gray-800" : "bg-white"
+                  } shadow-xl hover:shadow-2xl border ${
+                    isDark ? "border-gray-700" : "border-gray-200"
+                  }`}
+                >
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${
+                      item.color === "purple"
+                        ? "from-purple-600/10 to-transparent"
+                        : "from-teal-600/10 to-transparent"
+                    } rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                  ></div>
+
+                  <div className="relative">
+                    <div
+                      className={`w-12 h-12 bg-gradient-to-r ${
+                        item.color === "purple"
+                          ? "from-purple-600 to-purple-500"
+                          : "from-teal-600 to-teal-500"
+                      } rounded-xl flex items-center justify-center mb-4`}
+                    >
+                      <item.icon className="w-6 h-6 text-white" />
+                    </div>
+
+                    <h3
+                      className={`text-xl font-bold mb-3 ${
+                        isDark ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      {item.title}
+                    </h3>
+
+                    <p
+                      className={`leading-relaxed ${
+                        isDark ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom Message */}
+            <div
+              className={`mt-12 text-center p-8 rounded-2xl ${
+                isDark
+                  ? "bg-gradient-to-r from-purple-900/30 to-teal-900/30"
+                  : "bg-gradient-to-r from-purple-50 to-teal-50"
+              } border ${
+                isDark ? "border-purple-500/30" : "border-purple-200/50"
+              }`}
+            >
+              <p
+                className={`text-lg md:text-xl leading-relaxed ${
+                  isDark ? "text-gray-200" : "text-gray-700"
+                }`}
+              >
+                <em>
+                  At Dhiti.AI, we're not just predicting your career. We're{" "}
+                  <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
+                    unlocking your potential
+                  </span>
+                  , so you can{" "}
+                  <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-purple-600">
+                    lead the future of work
+                  </span>
+                  .
+                </em>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Call to Action Section */}
+        <section className="py-20">
+          <div className="container mx-auto px-6 max-w-4xl">
+            <div
+              className={`text-center rounded-3xl p-12 ${
+                isDark
+                  ? "bg-gradient-to-r from-purple-900/40 via-teal-900/40 to-purple-900/40"
+                  : "bg-gradient-to-r from-purple-100 via-teal-100 to-purple-100"
+              } shadow-2xl`}
+            >
+              <h3
+                className={`text-3xl md:text-4xl font-bold mb-6 ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Ready to Discover Your{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
+                  IT Career Path?
+                </span>
+              </h3>
+              <p
+                className={`text-lg md:text-xl mb-8 ${
+                  isDark ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                Join thousands of professionals who have already transformed
+                their careers with our AI-powered platform.
+              </p>
+              <button className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-purple-600 to-teal-600 text-white text-lg font-bold rounded-xl hover:from-purple-700 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 shadow-xl hover:shadow-2xl">
+                Start Your Assessment
+                <ArrowRight className="ml-3 w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

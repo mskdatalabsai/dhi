@@ -1,13 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { CreditCard, Shield, Clock } from "lucide-react";
-import { useState } from "react";
+import { CreditCard, Shield, Clock, Globe } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 
 declare global {
   interface Window {
     Razorpay: any;
   }
+}
+
+interface RegionData {
+  country: string;
+  currency: string;
+  amount: number;
+  amountInPaise: number;
+  symbol: string;
+  isIndia: boolean;
 }
 
 const SecurePaymentCard = ({
@@ -19,12 +28,73 @@ const SecurePaymentCard = ({
 }) => {
   const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [regionData, setRegionData] = useState<RegionData>({
+    country: "Loading...",
+    currency: "INR",
+    amount: 95,
+    amountInPaise: 9500,
+    symbol: "₹",
+    isIndia: true,
+  });
+  const [isLoadingRegion, setIsLoadingRegion] = useState(true);
+
+  // Detect user's region on component mount
+  useEffect(() => {
+    detectUserRegion();
+  }, []);
+
+  const detectUserRegion = async () => {
+    try {
+      // Using a free IP geolocation service
+      const response = await fetch("https://ipapi.co/json/");
+      const data = await response.json();
+
+      const isIndia = data.country_code === "IN";
+
+      const newRegionData: RegionData = isIndia
+        ? {
+            country: data.country_name || "India",
+            currency: "INR",
+            amount: 95,
+            amountInPaise: 9500, // ₹95 in paise
+            symbol: "₹",
+            isIndia: true,
+          }
+        : {
+            country: data.country_name || "International",
+            currency: "USD",
+            amount: 5,
+            amountInPaise: 500, // $5 in cents
+            symbol: "$",
+            isIndia: false,
+          };
+
+      setRegionData(newRegionData);
+      setIsLoadingRegion(false);
+
+      console.log(
+        `🌍 Detected region: ${newRegionData.country} - ${newRegionData.currency} ${newRegionData.symbol}${newRegionData.amount}`
+      );
+    } catch (error) {
+      console.error("Error detecting region:", error);
+      // Fallback to India pricing if detection fails
+      setRegionData({
+        country: "India (Default)",
+        currency: "INR",
+        amount: 95,
+        amountInPaise: 9500,
+        symbol: "₹",
+        isIndia: true,
+      });
+      setIsLoadingRegion(false);
+    }
+  };
 
   const handlePaymentSuccess = async (response: any) => {
     try {
       console.log("✅ Payment successful:", response);
 
-      // 🎯 STEP 1: Record payment in database via API
+      // Send region data along with payment info
       const apiResponse = await fetch("/api/payment/status", {
         method: "POST",
         headers: {
@@ -34,21 +104,17 @@ const SecurePaymentCard = ({
           razorpay_payment_id: response.razorpay_payment_id,
           razorpay_order_id: response.razorpay_order_id,
           razorpay_signature: response.razorpay_signature,
+          // Include region data for proper recording
+          regionData: regionData,
         }),
       });
 
       const result = await apiResponse.json();
 
       if (apiResponse.ok && result.success) {
-        // 🎯 STEP 2: Payment recorded successfully
         console.log("✅ Payment recorded in database");
-
-        // Small delay for better UX
         await new Promise((resolve) => setTimeout(resolve, 1000));
-
         alert("🎉 Payment successful! Setting up your profile...");
-
-        // 🎯 STEP 3: Redirect to profile page
         window.location.href = "/profile";
       } else {
         throw new Error(result.error || "Failed to record payment");
@@ -76,7 +142,6 @@ const SecurePaymentCard = ({
       return;
     }
 
-    // Check if user is logged in
     if (!session?.user?.email) {
       alert("Please login first to make a payment.");
       window.location.href = "/auth/signin";
@@ -87,8 +152,8 @@ const SecurePaymentCard = ({
 
     try {
       const orderData = {
-        amount: 9900, // ₹99 in paise
-        currency: "INR",
+        amount: regionData.amountInPaise,
+        currency: regionData.currency,
         receipt: "receipt_" + Date.now(),
       };
 
@@ -97,7 +162,7 @@ const SecurePaymentCard = ({
         amount: orderData.amount,
         currency: orderData.currency,
         name: "AI Career Assessment",
-        description: "Career Assessment Fee - ₹99",
+        description: `Career Assessment Fee - ${regionData.symbol}${regionData.amount}`,
         image: "/logo.png",
         handler: function (response: any) {
           handlePaymentSuccess(response);
@@ -110,9 +175,12 @@ const SecurePaymentCard = ({
         notes: {
           userEmail: session.user.email,
           userId: session.user.id || session.user.email,
+          country: regionData.country,
+          currency: regionData.currency,
+          amount: regionData.amount,
         },
         theme: {
-          color: "#8B5CF6", // Purple color to match your theme
+          color: "#8B5CF6",
         },
         modal: {
           ondismiss: function () {
@@ -149,6 +217,48 @@ const SecurePaymentCard = ({
         </h3>
       </div>
 
+      {/* Region Detection Info */}
+      {isLoadingRegion ? (
+        <div
+          className={`p-3 rounded-lg mb-4 ${
+            isDark ? "bg-gray-700" : "bg-gray-100"
+          }`}
+        >
+          <div className="flex items-center space-x-2">
+            <Globe className="w-4 h-4 animate-spin text-purple-600" />
+            <p
+              className={`text-sm ${
+                isDark ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              Detecting your region for pricing...
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div
+          className={`p-3 rounded-lg mb-4 ${
+            isDark ? "bg-gray-700" : "bg-gray-100"
+          }`}
+        >
+          <div className="flex items-center space-x-2">
+            <Globe className="w-4 h-4 text-purple-600" />
+            <p
+              className={`text-sm ${
+                isDark ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              Region: <span className="font-medium">{regionData.country}</span>
+              {!regionData.isIndia && (
+                <span className="ml-2 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
+                  International Pricing
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* User Info */}
       {session?.user && (
         <div
@@ -175,14 +285,22 @@ const SecurePaymentCard = ({
             isDark ? "text-white" : "text-gray-900"
           }`}
         >
-          ₹99
+          {regionData.symbol}
+          {regionData.amount}
         </div>
         <p className={`text-lg ${isDark ? "text-gray-300" : "text-gray-600"}`}>
           One-time assessment fee
         </p>
+        <p
+          className={`text-sm mt-2 ${
+            isDark ? "text-gray-400" : "text-gray-500"
+          }`}
+        >
+          {regionData.currency} · {regionData.country}
+        </p>
       </div>
 
-      {/* Test Mode Info */}
+      {/* Test Mode Info - Updated for both currencies */}
       <div
         className={`p-4 rounded-lg mb-6 border-l-4 border-teal-500 ${
           isDark ? "bg-teal-900/20" : "bg-teal-50"
@@ -200,7 +318,7 @@ const SecurePaymentCard = ({
             isDark ? "text-teal-200" : "text-teal-700"
           }`}
         >
-          This is a test payment. Use these test card details:
+          This is a test payment. Use these test details:
         </p>
         <ul
           className={`text-sm space-y-1 ${
@@ -211,6 +329,10 @@ const SecurePaymentCard = ({
           <li>• Expiry: Any future date</li>
           <li>• CVV: Any 3 digits</li>
           <li>• Name: Any name</li>
+          {regionData.isIndia && <li>• For INR: Use any Indian test card</li>}
+          {!regionData.isIndia && (
+            <li>• For USD: International cards accepted</li>
+          )}
         </ul>
       </div>
 
@@ -230,9 +352,11 @@ const SecurePaymentCard = ({
       <button
         type="button"
         onClick={handleRazorpayPayment}
-        disabled={isSubmitting || !razorpayLoaded || !session?.user}
+        disabled={
+          isSubmitting || !razorpayLoaded || !session?.user || isLoadingRegion
+        }
         className={`w-full py-4 rounded-lg font-semibold text-lg transition-all duration-300 ${
-          isSubmitting || !razorpayLoaded || !session?.user
+          isSubmitting || !razorpayLoaded || !session?.user || isLoadingRegion
             ? "bg-purple-300 text-white cursor-not-allowed"
             : "bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white hover:shadow-lg transform hover:scale-[1.02]"
         }`}
@@ -242,6 +366,11 @@ const SecurePaymentCard = ({
             <Clock className="w-5 h-5 mr-2 animate-spin" />
             Processing Payment...
           </span>
+        ) : isLoadingRegion ? (
+          <span className="flex items-center justify-center">
+            <Globe className="w-5 h-5 mr-2 animate-spin" />
+            Detecting Region...
+          </span>
         ) : !razorpayLoaded ? (
           "Loading Payment System..."
         ) : !session?.user ? (
@@ -249,7 +378,8 @@ const SecurePaymentCard = ({
         ) : (
           <span className="flex items-center justify-center">
             <CreditCard className="w-5 h-5 mr-2" />
-            Pay ₹99 with Razorpay
+            Pay {regionData.symbol}
+            {regionData.amount} with Razorpay
           </span>
         )}
       </button>

@@ -15,15 +15,17 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ isDark }) => {
             isDark ? "text-white" : "text-gray-900"
           }`}
         >
-          How Our AI Assessment Works
+          How Dhiti.AI Works
         </h2>
         <p
           className={`text-xl max-w-3xl mx-auto ${
             isDark ? "text-gray-300" : "text-gray-600"
           }`}
         >
-          Advanced algorithms analyze your skills, experience, and career goals
-          to provide personalized recommendations
+          Step into clarity with AI-powered insights. Our advanced algorithms
+          decode your skills, experience, and ambitions to deliver personalized
+          career recommendations guiding you toward the IT role where you’ll
+          shine. From who you are → to where you belong.
         </p>
       </div>
 
@@ -48,8 +50,10 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ isDark }) => {
               isDark ? "text-gray-300" : "text-gray-600"
             }`}
           >
-            Take our comprehensive AI-powered assessment that evaluates your
-            technical skills, personality traits, and career preferences
+            Take our comprehensive AI-powered assessment that goes beyond
+            resumes — evaluating your technical skills, personality traits, and
+            career preferences to reveal the IT role you’re truly built for. Not
+            just what you can do, but where you’ll thrive.
           </p>
         </div>
 
@@ -73,8 +77,11 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ isDark }) => {
               isDark ? "text-gray-300" : "text-gray-600"
             }`}
           >
-            Our machine learning algorithms process your data against thousands
-            of successful career paths and industry requirements
+            Our machine learning engine compares your profile against thousands
+            of proven career journeys and real-world industry demands,
+            uncovering the IT roles where your skills and passions align for
+            maximum success. Smart insights. Real opportunities. Your perfect
+            fit.
           </p>
         </div>
 
@@ -98,8 +105,10 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ isDark }) => {
               isDark ? "text-gray-300" : "text-gray-600"
             }`}
           >
-            Receive a customized learning path, role recommendations, and career
-            roadmap tailored specifically to your profile
+            Get a custom career blueprint designed just for you — including role
+            recommendations, skill-building roadmaps, and learning paths
+            tailored to your unique profile. Your personalized guide from
+            today’s potential to tomorrow’s success.
           </p>
         </div>
       </div>

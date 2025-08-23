@@ -79,18 +79,27 @@ const LandHero = ({ isDark, videoPath }: landHeroProps) => {
                 {" "}
                 IT role{" "}
               </span>
-              you were born to do
+              you were destined to master
             </h1>
 
             {/* TAGLINE ADDED HERE - Below heading, above description */}
+            {/* <p
+              className={`text-lg md:text-xl font-semibold mb-4 ${
+                isDark ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-teal-500 to-blue-600">
+                Beyond Skills. Beyond Resumes. Your Future in Tech, Powered by
+                Passion.
+              </span>
+            </p> */}
             <p
               className={`text-lg md:text-xl font-semibold mb-4 ${
                 isDark ? "text-gray-300" : "text-gray-700"
               }`}
             >
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-teal-500 to-blue-600">
-                Beyond Skills. Beyond Resumes. Discover Your IT Future, Fueled
-                by Passion.
+                Where your mind meets AI — uncover your true IT path with Dhiti
               </span>
             </p>
 
@@ -99,11 +108,12 @@ const LandHero = ({ isDark, videoPath }: landHeroProps) => {
                 isDark ? "text-gray-300" : "text-gray-600"
               }`}
             >
-              DHITI.AI uses an innovative survey to understand your unique
-              strengths and passions. Our Generative AI-powered algorithms then
-              analyze these inputs to recommend the ideal IT career paths where
-              you&apos;ll not only succeed but truly thrive, ensuring
-              you&apos;re leading the future of works.
+              Dhiti.AI isn’t just another career test — it’s your personal AI
+              career compass. Through an innovative heuristic survey, we decode
+              your strengths, passions, and potential. Our Generative AI-powered
+              engine translates these insights into tailored IT career paths —
+              so you don’t just work in tech, you thrive at the forefront of it.
+              Lead the future of work, on your terms.
             </p>
           </div>
 
@@ -161,7 +171,6 @@ const LandHero = ({ isDark, videoPath }: landHeroProps) => {
               </div>
             </div>
 
-            {/* Powered by AI*/}
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-teal-500 flex items-center justify-center">
                 <svg

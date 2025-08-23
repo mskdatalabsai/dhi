@@ -32,7 +32,7 @@ interface DetailedQuestion {
   answeredAt: Date | null;
   wasChanged: boolean;
   isQualitative?: boolean;
-  // FIXED: Additional fields for better tracking
+  // Additional fields for better tracking
   answered?: boolean;
   responseText?: string | null;
 }
@@ -203,63 +203,19 @@ const SurveyPage = () => {
 
       console.log(`🔍 Raw questions received: ${questions.length}`);
 
-      // FIXED: Less aggressive deduplication - only remove exact duplicates
-      const seenIds = new Set();
-      const seenTexts = new Set();
-      const duplicatesRemoved: string[] = [];
-
-      const uniqueQuestions = questions.filter(
-        (question: any, index: number) => {
-          // Check for ID duplicates
-          if (question.id && seenIds.has(question.id)) {
-            duplicatesRemoved.push(`ID duplicate: ${question.id}`);
-            return false;
-          }
-
-          // Check for exact text duplicates (only if both have question text)
-          if (question.question) {
-            const normalizedText = question.question.trim().toLowerCase();
-            if (seenTexts.has(normalizedText)) {
-              duplicatesRemoved.push(
-                `Text duplicate: ${question.question.substring(0, 50)}...`
-              );
-              return false;
-            }
-            seenTexts.add(normalizedText);
-          }
-
-          if (question.id) {
-            seenIds.add(question.id);
-          }
-
-          return true;
-        }
-      );
-
-      console.log(
-        `🔍 After deduplication: ${uniqueQuestions.length} unique questions`
-      );
-
-      if (duplicatesRemoved.length > 0) {
-        console.warn(
-          `⚠️ Removed ${duplicatesRemoved.length} duplicate questions:`,
-          duplicatesRemoved
-        );
-      }
-
-      // FIXED: Ensure each question has proper structure and ID
-      const questionsWithIds = uniqueQuestions.map(
+      // NO DUPLICATION FILTER - Use all questions as received
+      const questionsWithIds = questions.map(
         (question: any, index: number) => ({
           ...question,
           id: question.id || `question_${index}_${Date.now()}`,
           uniqueIndex: index,
-          // FIXED: Ensure proper question classification
+          // Ensure proper question classification
           isQualitative: question.isQualitative || false,
           required: question.required !== false, // Default to required unless explicitly false
         })
       );
 
-      // FIXED: Validate question structure
+      // Validate question structure
       const validQuestions = questionsWithIds.filter((question: any) => {
         if (!question.question || question.question.trim() === "") {
           console.warn(`⚠️ Skipping question with empty text:`, question);
@@ -296,7 +252,7 @@ const SurveyPage = () => {
         ...metadata,
       });
 
-      // FIXED: Enhanced logging for question breakdown
+      // Enhanced logging for question breakdown
       const technicalQuestions = validQuestions.filter(
         (q: any) => !q.isQualitative
       );
@@ -386,7 +342,7 @@ const SurveyPage = () => {
     return "bg-purple-500";
   };
 
-  // FIXED: Enhanced prepareDetailedQuestions to store ALL question results
+  // Enhanced prepareDetailedQuestions to store ALL question results
   const prepareDetailedQuestions = useCallback(() => {
     const detailed: DetailedQuestion[] = questions.map((question, index) => {
       const userAnswerIndex = answers[question.id];
@@ -397,7 +353,7 @@ const SurveyPage = () => {
             : null
           : null;
 
-      // FIXED: Calculate isCorrect for technical questions, store response for qualitative
+      // Calculate isCorrect for technical questions, store response for qualitative
       const isCorrect =
         !question.isQualitative && userAnswer === question.correctAnswer;
       const countsTowardScore =
@@ -411,14 +367,14 @@ const SurveyPage = () => {
         level: question.level || "medium",
         options: question.options || [],
         correctAnswer: question.correctAnswer || "",
-        userAnswer, // FIXED: This now stores responses for BOTH technical and qualitative
+        userAnswer, // This now stores responses for BOTH technical and qualitative
         isCorrect,
         countsTowardScore,
         timeSpent: timeSpent[index] || 0,
         answeredAt: userAnswer ? new Date() : null,
         wasChanged: answerChanges[question.id] || false,
         isQualitative: question.isQualitative || false,
-        // FIXED: Add additional fields for better tracking
+        // Add additional fields for better tracking
         answered: userAnswer !== null,
         responseText:
           userAnswerIndex !== undefined &&
@@ -429,7 +385,7 @@ const SurveyPage = () => {
       };
     });
 
-    // FIXED: Log detailed breakdown
+    // Log detailed breakdown
     const technical = detailed.filter((q) => !q.isQualitative);
     const qualitative = detailed.filter((q) => q.isQualitative);
     const technicalAnswered = technical.filter((q) => q.answered).length;
@@ -450,13 +406,13 @@ const SurveyPage = () => {
     return detailed;
   }, [questions, answers, timeSpent, answerChanges]);
 
-  // FIXED: Calculate score function for TECHNICAL QUESTIONS ONLY
+  // Calculate score function for TECHNICAL QUESTIONS ONLY
   const calculateScore = useCallback(() => {
     let correctAnswers = 0;
     let technicalQuestionsCount = 0;
 
     questions.forEach((question) => {
-      // FIXED: Only score technical questions (must have correctAnswer and NOT be qualitative)
+      // Only score technical questions (must have correctAnswer and NOT be qualitative)
       if (
         !question.isQualitative &&
         question.correctAnswer &&
@@ -495,7 +451,7 @@ const SurveyPage = () => {
     return correctAnswers;
   }, [answers, questions]);
 
-  // FIXED: Enhanced submitSurvey function with proper level calculation
+  // Enhanced submitSurvey function with proper level calculation
   const submitSurvey = useCallback(async () => {
     const timeSpentOnQuestion = Math.floor(
       (Date.now() - questionStartTime) / 1000
@@ -509,7 +465,7 @@ const SurveyPage = () => {
     let requiredSkipped = 0;
     let totalRequired = 0;
 
-    // FIXED: Better validation logic
+    // Better validation logic
     questions.forEach((question) => {
       if (question.required !== false) {
         // Default to required unless explicitly false
@@ -529,7 +485,7 @@ const SurveyPage = () => {
     console.log(`  - Required Skipped: ${requiredSkipped}`);
     console.log(`  - Total Answered: ${Object.keys(answers).length}`);
 
-    // FIXED: More lenient validation - allow submission if most questions are answered
+    // More lenient validation - allow submission if most questions are answered
     if (Object.keys(errors).length > 0) {
       const skipPercentage = (requiredSkipped / totalRequired) * 100;
 
@@ -563,16 +519,16 @@ const SurveyPage = () => {
       const detailedQuestionsData = prepareDetailedQuestions();
       setDetailedQuestions(detailedQuestionsData);
 
-      // FIXED: Better counting of attempted questions (ALL questions, not just answers object)
+      // Better counting of attempted questions (ALL questions, not just answers object)
       const totalAnswered = detailedQuestionsData.filter(
         (q) => q.answered
       ).length;
       const questionsAttempted = totalAnswered;
 
-      // FIXED: Strict separation of technical vs qualitative questions for scoring
+      // Strict separation of technical vs qualitative questions for scoring
       const allQuestions = questions || [];
 
-      // FIXED: Only technical questions with valid correctAnswer are used for scoring
+      // Only technical questions with valid correctAnswer are used for scoring
       const technicalQuestions = allQuestions.filter(
         (q) =>
           !q.isQualitative && q.correctAnswer && q.correctAnswer.trim() !== ""
@@ -614,7 +570,7 @@ const SurveyPage = () => {
         );
       }
 
-      // FIXED: Level breakdown calculation with STRICT separation
+      // Level breakdown calculation with STRICT separation
       const calculateLevelBreakdown = (
         questionSet: any[],
         type: "technical" | "qualitative"
@@ -647,7 +603,7 @@ const SurveyPage = () => {
         return levelMap;
       };
 
-      // FIXED: Calculate level breakdowns using ONLY properly classified questions
+      // Calculate level breakdowns using ONLY properly classified questions
       const questionsByLevel = calculateLevelBreakdown(
         technicalQuestions,
         "technical"
@@ -657,7 +613,7 @@ const SurveyPage = () => {
         "qualitative"
       );
 
-      // FIXED: Calculate percentage based ONLY on technical questions
+      // Calculate percentage based ONLY on technical questions
       const technicalPercentage =
         technicalQuestionsCount > 0
           ? Math.round((finalScore / technicalQuestionsCount) * 100)
@@ -670,7 +626,7 @@ const SurveyPage = () => {
       console.log(`  - Technical Levels:`, questionsByLevel);
       console.log(`  - Qualitative Levels:`, qualitativeBreakdown);
 
-      // FIXED: Enhanced survey data with proper field mapping and ALL questions included
+      // Enhanced survey data with proper field mapping and ALL questions included
       const surveyData = {
         // Basic survey data - Updated scoring logic
         startedAt: surveyStartTime,
@@ -678,20 +634,20 @@ const SurveyPage = () => {
         score: finalScore, // Only technical questions
         totalQuestions: allQuestions.length, // ALL questions loaded
 
-        // FIXED: Use the exact field names that the API expects
+        // Use the exact field names that the API expects
         technicalQuestionsTotal: technicalQuestionsCount,
         qualitativeQuestionsTotal: qualitativeQuestionsCount,
 
-        questionsAttempted, // FIXED: Now counts ALL answered questions
+        questionsAttempted, // Now counts ALL answered questions
         skippedQuestions: allQuestions.length - questionsAttempted,
         percentage: technicalPercentage,
 
-        // FIXED: Scoring metadata with exact field names
+        // Scoring metadata with exact field names
         scoringMethod: "technical_only",
         scoredQuestionsCount: technicalQuestionsCount,
         analysisOnlyQuestionsCount: qualitativeQuestionsCount,
 
-        // FIXED: Level breakdowns with proper structure
+        // Level breakdowns with proper structure
         questionsByLevel, // Technical questions by level
         qualitativeBreakdown, // Qualitative questions by level
 
@@ -699,7 +655,7 @@ const SurveyPage = () => {
         technicalQuestions: technicalQuestionsCount,
         qualitativeQuestions: qualitativeQuestionsCount,
 
-        // FIXED: Include ALL questions in detailed data (both technical and qualitative)
+        // Include ALL questions in detailed data (both technical and qualitative)
         questions: detailedQuestionsData, // This now includes ALL questions with their responses
 
         // Timing and interaction data
@@ -727,7 +683,7 @@ const SurveyPage = () => {
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
 
-      // FIXED: Debug logging to verify data before submission
+      // Debug logging to verify data before submission
       console.log("🔍 Survey Data Debug Before Submission:", {
         totalQuestions: surveyData.totalQuestions,
         technicalQuestionsTotal: surveyData.technicalQuestionsTotal,
@@ -760,7 +716,7 @@ const SurveyPage = () => {
       if (response.ok) {
         console.log("Survey submitted successfully:", result);
 
-        // FIXED: Clear success message emphasizing technical-only scoring
+        // Clear success message emphasizing technical-only scoring
         const technicalAnswered = technicalQuestions.filter(
           (q) => answers[q.id] !== undefined
         ).length;
@@ -773,7 +729,7 @@ const SurveyPage = () => {
 📊 TECHNICAL SCORE: ${technicalPercentage}% (${finalScore}/${technicalQuestionsCount})
    └── Only technical questions count toward your score
 
-📝 RESPONSE SUMMARY:
+🔍 RESPONSE SUMMARY:
    • Total Questions: ${surveyData.totalQuestions}
    • Technical Questions: ${technicalQuestionsCount} (${technicalAnswered} answered)
    • Qualitative Questions: ${qualitativeQuestionsCount} (${qualitativeAnswered} answered)
@@ -847,7 +803,7 @@ Redirecting to detailed results...`;
     const question = questions[currentQuestion];
     if (!question) return true; // If no question, consider valid
 
-    // FIXED: Only validate if question is marked as required
+    // Only validate if question is marked as required
     if (!question.required) return true;
 
     const answer = answers[question.id];
@@ -974,7 +930,7 @@ Redirecting to detailed results...`;
   if (questions.length > 0) {
     const currentQ = questions[currentQuestion];
 
-    // FIXED: Enhanced debug log for development
+    // Enhanced debug log for development
     if (process.env.NODE_ENV === "development") {
       const technicalScored = questions.filter(
         (q) => !q.isQualitative && q.correctAnswer
@@ -1019,7 +975,7 @@ Redirecting to detailed results...`;
             getProgressBarColor={getProgressBarColor}
           />
 
-          {/* FIXED: Clear assessment info showing scoring vs analysis separation */}
+          {/* Clear assessment info showing scoring vs analysis separation */}
           <div
             className={`text-xs mb-2 flex justify-between ${
               isDark ? "text-gray-500" : "text-gray-500"

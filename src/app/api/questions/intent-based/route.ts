@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// api/questions/intent-based/route.ts - Enhanced with OpenAI optimization
+// api/questions/intent-based/route.ts - Enhanced with OpenAI optimization and improved question fetching
 
 import { NextRequest, NextResponse } from "next/server";
 import adminDb from "../../../lib/firebase/admin";
@@ -450,7 +450,7 @@ function createSmartDistribution(
   return distribution;
 }
 
-// Helper function to get random questions from a collection
+// IMPROVED: Enhanced helper function to get random questions from a collection with better fallback logic
 async function getQuestionsFromCollection(
   collectionPath: string,
   count: number,
@@ -458,23 +458,66 @@ async function getQuestionsFromCollection(
 ): Promise<FirestoreQuestion[]> {
   try {
     if (typeof difficulty === "object") {
-      // Fetch questions by multiple difficulty levels
+      // Fetch questions by multiple difficulty levels with fallback logic
       const questions: FirestoreQuestion[] = [];
+      const totalRequested = Object.values(difficulty).reduce(
+        (sum, val) => sum + val,
+        0
+      );
+
+      console.log(
+        `🎯 Fetching ${totalRequested} questions from ${collectionPath} with difficulty breakdown:`,
+        difficulty
+      );
 
       for (const [level, levelCount] of Object.entries(difficulty)) {
         if (levelCount > 0) {
+          console.log(`  - Requesting ${levelCount} ${level} questions`);
           const levelQuestions = await getQuestionsFromCollection(
             collectionPath,
             levelCount,
             level
           );
+          console.log(`  - Got ${levelQuestions.length} ${level} questions`);
           questions.push(...levelQuestions);
         }
       }
 
+      // FALLBACK: If we didn't get enough questions with difficulty constraints,
+      // fetch additional questions without difficulty constraint
+      if (questions.length < totalRequested) {
+        const shortfall = totalRequested - questions.length;
+        console.log(
+          `⚠️ Shortfall of ${shortfall} questions in ${collectionPath}, fetching additional questions without difficulty constraint`
+        );
+
+        const additionalQuestions = await getQuestionsFromCollection(
+          collectionPath,
+          shortfall * 2 // Request more to account for potential duplicates
+        );
+
+        // Filter out questions we already have (by ID)
+        const existingIds = new Set(questions.map((q) => q.id));
+        const newQuestions = additionalQuestions.filter(
+          (q) => !existingIds.has(q.id)
+        );
+
+        questions.push(...newQuestions.slice(0, shortfall));
+        console.log(
+          `✅ Added ${Math.min(
+            newQuestions.length,
+            shortfall
+          )} additional questions from ${collectionPath}`
+        );
+      }
+
+      console.log(
+        `📊 Final result for ${collectionPath}: ${questions.length}/${totalRequested} questions`
+      );
       return questions;
     }
 
+    // Single difficulty level or no difficulty constraint
     let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> =
       adminDb.collection(collectionPath);
 
@@ -499,10 +542,28 @@ async function getQuestionsFromCollection(
       } as FirestoreQuestion);
     });
 
+    const available = questions.length;
+    const requested = count;
+
+    if (available < requested) {
+      console.log(
+        `⚠️ ${collectionPath} (${
+          difficulty || "any"
+        }): Only ${available}/${requested} questions available`
+      );
+    } else {
+      console.log(
+        `✅ ${collectionPath} (${
+          difficulty || "any"
+        }): ${available}/${requested} questions available`
+      );
+    }
+
     // Shuffle and return requested count
-    return shuffleArray(questions).slice(0, count);
+    const result = shuffleArray(questions).slice(0, count);
+    return result;
   } catch (error) {
-    console.error(`Error fetching from ${collectionPath}:`, error);
+    console.error(`❌ Error fetching from ${collectionPath}:`, error);
     return [];
   }
 }
@@ -544,8 +605,22 @@ export async function POST(request: NextRequest) {
           domain.count,
           domain.difficulty
         );
+
+        console.log(
+          `📊 Actually got ${domainQuestions.length} questions from ${domain.domain}`
+        );
         technicalQuestions.push(...domainQuestions);
       }
+
+      // Log technical question summary
+      console.log(`🔢 Technical Questions Summary:`);
+      console.log(
+        `  - Total requested: ${distribution.technicalDomains.reduce(
+          (sum, d) => sum + d.count,
+          0
+        )}`
+      );
+      console.log(`  - Total collected: ${technicalQuestions.length}`);
 
       // Fetch qualitative questions based on AI distribution
       for (const cluster of distribution.qualitativeClusters) {
@@ -558,8 +633,22 @@ export async function POST(request: NextRequest) {
           clusterPath,
           cluster.count
         );
+
+        console.log(
+          `📊 Actually got ${clusterQuestions.length} questions from ${cluster.cluster}`
+        );
         qualitativeQuestions.push(...clusterQuestions);
       }
+
+      // Log qualitative question summary
+      console.log(`🔢 Qualitative Questions Summary:`);
+      console.log(
+        `  - Total requested: ${distribution.qualitativeClusters.reduce(
+          (sum, c) => sum + c.count,
+          0
+        )}`
+      );
+      console.log(`  - Total collected: ${qualitativeQuestions.length}`);
     } else {
       console.log("🔄 Using rule-based question selection (AI failed)");
 
@@ -679,9 +768,99 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Ensure we have exactly 40 technical and 29 qualitative
+    // IMPROVED: Better final adjustment logic
+    console.log(
+      `🎯 Pre-adjustment counts: Technical=${technicalQuestions.length}, Qualitative=${qualitativeQuestions.length}`
+    );
+
+    // If we still don't have enough technical questions, try to fetch more from any available collection
+    if (technicalQuestions.length < 40) {
+      const shortfall = 40 - technicalQuestions.length;
+      console.log(
+        `⚠️ Technical shortfall: ${shortfall} questions. Attempting to fill from available collections...`
+      );
+
+      // Try to get more questions from the most popular collections
+      const fallbackCollections = [
+        "Engineering_Development_Software_engineer_or_developer",
+        "Product_Management_Business_Analyst",
+        "Design_and_User_Experience_UX_Designer",
+        "Data_Science_and_Analytics_Data_scientist",
+      ];
+
+      for (const collection of fallbackCollections) {
+        if (technicalQuestions.length >= 40) break;
+
+        const needed = 40 - technicalQuestions.length;
+        console.log(
+          `🔄 Trying to get ${needed} more questions from ${collection}`
+        );
+
+        const additionalQuestions = await getQuestionsFromCollection(
+          `questions/technical/${collection}`,
+          needed * 2 // Get extra to avoid duplicates
+        );
+
+        // Filter out duplicates
+        const existingIds = new Set(technicalQuestions.map((q) => q.id));
+        const newQuestions = additionalQuestions.filter(
+          (q) => !existingIds.has(q.id)
+        );
+
+        technicalQuestions.push(...newQuestions.slice(0, needed));
+        console.log(
+          `➕ Added ${Math.min(
+            newQuestions.length,
+            needed
+          )} questions from ${collection}`
+        );
+      }
+    }
+
+    // If we still don't have enough qualitative questions, do the same
+    if (qualitativeQuestions.length < 29) {
+      const shortfall = 29 - qualitativeQuestions.length;
+      console.log(
+        `⚠️ Qualitative shortfall: ${shortfall} questions. Attempting to fill...`
+      );
+
+      const fallbackClusters = [
+        "Self-Awareness_And_Growth-Mindset",
+        "Collaboration_And_Social-Intelligence",
+        "Resilience_And_Self-Regulation",
+      ];
+
+      for (const cluster of fallbackClusters) {
+        if (qualitativeQuestions.length >= 29) break;
+
+        const needed = 29 - qualitativeQuestions.length;
+        const additionalQuestions = await getQuestionsFromCollection(
+          `questions/qualitative/${cluster}`,
+          needed * 2
+        );
+
+        const existingIds = new Set(qualitativeQuestions.map((q) => q.id));
+        const newQuestions = additionalQuestions.filter(
+          (q) => !existingIds.has(q.id)
+        );
+
+        qualitativeQuestions.push(...newQuestions.slice(0, needed));
+        console.log(
+          `➕ Added ${Math.min(
+            newQuestions.length,
+            needed
+          )} qualitative questions from ${cluster}`
+        );
+      }
+    }
+
+    // Final counts (keep the existing slice logic as final safety)
     technicalQuestions = technicalQuestions.slice(0, 40);
     qualitativeQuestions = qualitativeQuestions.slice(0, 29);
+
+    console.log(
+      `✅ Final question counts: Technical=${technicalQuestions.length}/40, Qualitative=${qualitativeQuestions.length}/29`
+    );
 
     console.log(
       `Selected ${technicalQuestions.length} technical and ${qualitativeQuestions.length} qualitative questions`

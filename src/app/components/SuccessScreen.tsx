@@ -335,12 +335,14 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
     datasets: [
       {
         data: [correctCount, incorrectCount],
-        backgroundColor: propIsDark
-          ? ["rgba(168, 85, 247, 0.8)", "rgba(239, 68, 68, 0.3)"]
-          : ["rgba(168, 85, 247, 0.8)", "rgba(239, 68, 68, 0.3)"],
-        borderColor: propIsDark
-          ? ["#a855f7", "rgba(239, 68, 68, 0.5)"]
-          : ["#a855f7", "rgba(239, 68, 68, 0.5)"],
+        backgroundColor: [
+          "rgba(168, 85, 247, 0.8)", // Purple for correct
+          "rgba(251, 146, 60, 0.8)", // Orange for incorrect (changed from red)
+        ],
+        borderColor: [
+          "#a855f7", // Purple border
+          "#fb923c", // Orange border (changed from red)
+        ],
         borderWidth: 2,
       },
     ],
@@ -358,9 +360,9 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
               questionsByLevel.advanced,
             ],
             backgroundColor: [
-              "rgba(16, 185, 129, 0.8)",
-              "rgba(251, 146, 60, 0.8)",
-              "rgba(239, 68, 68, 0.8)",
+              "rgba(16, 185, 129, 0.8)", // Green for Easy
+              "rgba(251, 146, 60, 0.8)", // Orange for Medium
+              "rgba(245, 158, 11, 0.8)", // Amber for Advanced (changed from red)
             ],
           },
         ],
@@ -406,7 +408,6 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
   };
 
   //  PDF Export Function
-
   const handlePDFClick = () => {
     // Add safe print styles
     const style = document.createElement("style");
@@ -566,19 +567,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
     }
   };
 
-  // USAGE: Replace your PDF button with this:
-  /*
-<button
-  onClick={exportToPDFNuclearOption}
-  disabled={isExporting}
-  className="px-6 py-3 bg-gray-800 text-white rounded-lg"
->
-  {isExporting ? "Generating..." : "📄 Download PDF"}
-</button>
-*/
-
   // Fixed Email Function
-  // SOLUTION 1: Replace your entire sendEmail function with this
   const sendEmail = async () => {
     if (!emailAddress || !emailAddress.includes("@")) {
       alert("Please enter a valid email address.");
@@ -1297,15 +1286,17 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
                   </div>
                   <div
                     className={`text-center p-3 rounded-xl ${
-                      propIsDark ? "bg-red-900/20" : "bg-red-50"
+                      propIsDark ? "bg-orange-900/20" : "bg-orange-50" // Changed from red to orange
                     }`}
                   >
-                    <div className="text-2xl font-bold text-red-500">
+                    <div className="text-2xl font-bold text-orange-500">
+                      {" "}
+                      {/* Changed from red to orange */}
                       {incorrectCount}
                     </div>
                     <div
                       className={`text-xs ${
-                        propIsDark ? "text-red-400" : "text-red-700"
+                        propIsDark ? "text-orange-400" : "text-orange-700" // Changed from red to orange
                       }`}
                     >
                       Incorrect
@@ -1503,15 +1494,17 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
                   </div>
                   <div
                     className={`text-center p-4 rounded-xl ${
-                      propIsDark ? "bg-red-900/20" : "bg-red-50"
+                      propIsDark ? "bg-amber-900/20" : "bg-amber-50" // Changed from red to amber
                     }`}
                   >
-                    <div className="text-xl font-bold text-red-500">
+                    <div className="text-xl font-bold text-amber-600">
+                      {" "}
+                      {/* Changed from red to amber */}
                       {questionsByLevel?.advanced || 0}
                     </div>
                     <div
                       className={`text-sm ${
-                        propIsDark ? "text-red-400" : "text-red-700"
+                        propIsDark ? "text-amber-400" : "text-amber-700" // Changed from red to amber
                       }`}
                     >
                       Advanced
@@ -1742,7 +1735,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
                   >
                     🤖 AI Analysis
                     <span className="px-3 py-1 text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full">
-                      Powered by OpenAI
+                      Powered by DhitiAI
                     </span>
                   </h3>
                   <p
@@ -2011,15 +2004,16 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
                       <div
                         key={index}
                         className={`flex items-start gap-3 p-4 rounded-xl ${
-                          propIsDark ? "bg-red-900/20" : "bg-red-50"
+                          propIsDark ? "bg-amber-900/20" : "bg-amber-50" // Changed from red to amber
                         } border ${
-                          propIsDark ? "border-red-800" : "border-red-200"
+                          propIsDark ? "border-amber-700" : "border-amber-300" // Changed from red to amber
                         }`}
                       >
-                        <span className="text-red-500 mt-1">⚠️</span>
+                        <span className="text-amber-500 mt-1">📈</span>{" "}
+                        {/* Changed icon and color */}
                         <span
                           className={`text-sm ${
-                            propIsDark ? "text-red-300" : "text-red-700"
+                            propIsDark ? "text-amber-300" : "text-amber-700" // Changed from red to amber
                           }`}
                         >
                           {gap}
@@ -2119,7 +2113,6 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
         </div>
       </div>
       {/* Email Modal */}
-      // Replace your email modal section with this improved version
       {/* Improved Email Modal with Multiple Options */}
       {showEmailModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
@@ -2306,7 +2299,8 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
                 propIsDark ? "text-gray-500" : "text-gray-400"
               }`}
             >
-              Having trouble? Try the "Print Now" option or contact support.
+              Having trouble? Try the &quot;Print Now&quot; option or contact
+              support.
             </div>
           </div>
         </div>

@@ -16,15 +16,15 @@ const WhyChoose: React.FC<WhyChooseProps> = ({ isDark }) => {
             isDark ? "text-white" : "text-gray-900"
           }`}
         >
-          Why Choose Our AI Assessment Platform
+          Why Choose Dhiti.ai
         </h2>
         <p
           className={`text-lg max-w-3xl mx-auto ${
             isDark ? "text-gray-300" : "text-gray-600"
           }`}
         >
-          Science-backed assessments combined with machine learning to predict
-          your ideal career path
+          Our assessments blend psychometric science with machine learning to
+          pinpoint the IT career that aligns with your mindset and abilities.
         </p>
       </div>
 
@@ -47,8 +47,9 @@ const WhyChoose: React.FC<WhyChooseProps> = ({ isDark }) => {
             Precision Matching
           </h3>
           <p className={`${isDark ? "text-gray-300" : "text-gray-600"}`}>
-            Our AI analyzes 50+ data points to match you with roles where
-            you&apos;ll excel, saving months of trial and error.
+            We analyze 50+ behavioral and cognitive data points to match you
+            with roles where you’ll excel cutting out months of confusion,
+            trial, and error.
           </p>
         </div>
 

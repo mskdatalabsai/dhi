@@ -33,7 +33,7 @@ const CTAForm: React.FC<CTAFormProps> = ({
               isDark ? "text-white" : "text-gray-900"
             }`}
           >
-            Start Your Data Science Journey
+            Invest in yourself today. Your IT future starts here
           </h2>
           <div className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
@@ -80,7 +80,7 @@ const CTAForm: React.FC<CTAFormProps> = ({
                 onClick={() => (window.location.href = "/payment")}
                 className="inline-flex items-center px-10 py-5 bg-gradient-to-r from-purple-600 to-teal-600 text-white text-lg font-semibold rounded-xl hover:from-purple-700 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 shadow-xl hover:shadow-2xl"
               >
-                Start Free Consultation
+                Start Assessment
                 <ArrowRight className="ml-3 w-5 h-5" />
               </button>
             </div>
@@ -90,8 +90,7 @@ const CTAForm: React.FC<CTAFormProps> = ({
               isDark ? "text-gray-400" : "text-gray-500"
             }`}
           >
-            No upfront payment • Free career counseling • Industry expert
-            guidance
+            • Free career counseling • Industry expert guidance
           </p>
         </div>
       </div>
