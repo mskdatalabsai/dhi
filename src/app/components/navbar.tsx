@@ -14,6 +14,7 @@ import {
   Phone,
   LogOut,
   LogIn,
+  Shield,
 } from "lucide-react";
 
 type NavbarProps = {
@@ -48,6 +49,11 @@ const Navbar = ({ isDark, toggleTheme }: NavbarProps) => {
       name: "Assessment",
       href: "/survey",
       icon: <Target className="w-4 h-4" />,
+    },
+    {
+      name: "Dhiti Policies",
+      href: "/policy",
+      icon: <Shield className="w-4 h-4" />,
     },
     {
       name: "Contact",
