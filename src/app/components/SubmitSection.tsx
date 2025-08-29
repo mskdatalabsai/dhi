@@ -1,8 +1,20 @@
 import React from "react";
 import { Check, Loader2 } from "lucide-react";
 
-const SubmitSection = ({ isDark, isSaving, handleSubmit }: { isDark: boolean; isSaving: boolean; handleSubmit: () => void }) => (
-  <div className={`rounded-xl p-8 text-center ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
+const SubmitSection = ({
+  isDark,
+  isSaving,
+  handleSubmit,
+}: {
+  isDark: boolean;
+  isSaving: boolean;
+  handleSubmit: () => void;
+}) => (
+  <div
+    className={`rounded-xl p-8 text-center ${
+      isDark ? "bg-gray-800" : "bg-gray-100"
+    }`}
+  >
     <button
       onClick={handleSubmit}
       disabled={isSaving}
@@ -21,7 +33,7 @@ const SubmitSection = ({ isDark, isSaving, handleSubmit }: { isDark: boolean; is
       )}
     </button>
     <p className={`text-sm mt-4 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-      Your profile will be saved and you'll be redirected to the assessment
+      Your profile will be saved and you&apos;ll be redirected to the assessment
     </p>
   </div>
 );

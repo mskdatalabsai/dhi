@@ -14,10 +14,9 @@ import type { FirestoreQuestion } from "../../../types/firestore";
 import OpenAI from "openai";
 
 // Initialize OpenAI client
-const openai = process.env.OPENAI_API_KEY
+const openai = process.env.NEXT_PUBLIC_OPENAI_API_KEY
   ? new OpenAI({
-      apiKey:
-        "REMOVED_SECRET",
+      apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
     })
   : null;
 

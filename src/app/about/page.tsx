@@ -13,12 +13,7 @@ import {
 import Navbar from "@/components/Navbar";
 
 const AboutUsPage = () => {
-  const [isDark, setIsDark] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-  };
+  const [isDark] = useState(false);
 
   const differentiators = [
     {
@@ -174,7 +169,7 @@ const AboutUsPage = () => {
                       isDark ? "text-white" : "text-gray-900"
                     }`}
                   >
-                    Our Founder's Story
+                    Our Founder&apos;s Story
                   </h2>
                 </div>
 
@@ -393,7 +388,8 @@ const AboutUsPage = () => {
                 }`}
               >
                 <em>
-                  At Dhiti.AI, we're not just predicting your career. We're{" "}
+                  At Dhiti.AI, we&apos;re not just predicting your career.
+                  We&apos;re{" "}
                   <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-teal-600">
                     unlocking your potential
                   </span>

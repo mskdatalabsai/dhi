@@ -2147,7 +2147,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
                   propIsDark ? "text-gray-400" : "text-gray-600"
                 }`}
               >
-                Choose how you'd like to receive your report:
+                Choose how you&apos;d like to receive your report:
               </div>
             </div>
 

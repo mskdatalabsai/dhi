@@ -14,6 +14,7 @@ import CTAForm from "./components/CTAForm";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import LoadingScreen from "./components/LoadingScreen";
+import RegionalPricingComponent from "./components/RegionalPricingComponent";
 
 const HomePage = () => {
   const { data: session, status } = useSession();
@@ -92,6 +93,7 @@ const HomePage = () => {
                 formData={formData}
                 handleInputChange={handleInputChange}
               />
+              <RegionalPricingComponent isDark={isDark} />
             </div>
           </div>
         </>

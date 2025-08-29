@@ -1,16 +1,31 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { Loader2 } from "lucide-react";
 
-const ProfileHeader = ({ isDark, session, completion }: { isDark: boolean; session: any; completion: number }) => (
+const ProfileHeader = ({
+  isDark,
+  session,
+  completion,
+}: {
+  isDark: boolean;
+  session: any;
+  completion: number;
+}) => (
   <div className="mb-8">
-    <h2 className={`text-3xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
+    <h2
+      className={`text-3xl font-bold mb-2 ${
+        isDark ? "text-white" : "text-gray-900"
+      }`}
+    >
       Discover Your Perfect IT Career Path
     </h2>
     <p className={`text-lg ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-      Answer a few questions to get personalized career recommendations tailored to your background and goals
+      Answer a few questions to get personalized career recommendations tailored
+      to your background and goals
     </p>
     {session?.user && (
-      <p className={`text-sm mt-2 ${isDark ? "text-gray-500" : "text-gray-500"}`}>
+      <p
+        className={`text-sm mt-2 ${isDark ? "text-gray-500" : "text-gray-500"}`}
+      >
         Logged in as: {session.user.email}
       </p>
     )}
@@ -21,7 +36,11 @@ const ProfileHeader = ({ isDark, session, completion }: { isDark: boolean; sessi
           style={{ width: `${completion}%` }}
         ></div>
       </div>
-      <span className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+      <span
+        className={`text-sm font-medium ${
+          isDark ? "text-gray-400" : "text-gray-600"
+        }`}
+      >
         {completion}% Complete
       </span>
     </div>

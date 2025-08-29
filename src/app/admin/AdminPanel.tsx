@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -491,7 +491,7 @@ function DashboardView() {
 }
 
 // -----------------------------------------
-// UsersView Component (keeping original)
+// UsersView Component with ESLint fix
 // -----------------------------------------
 function UsersView() {
   const [users, setUsers] = useState<User[]>([]);
@@ -499,11 +499,7 @@ function UsersView() {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingUser, setEditingUser] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`/api/admin/users?search=${searchTerm}`);
@@ -515,7 +511,11 @@ function UsersView() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleDelete = async (userId: string, userEmail: string) => {
     if (!confirm(`Are you sure you want to delete ${userEmail}?`)) return;
@@ -860,7 +860,7 @@ function DebugView() {
 }
 
 // -----------------------------------------
-// SurveysView Component (NEW)
+// SurveysView Component
 // -----------------------------------------
 function SurveysView() {
   const [surveys, setSurveys] = useState<Survey[]>([]);
@@ -1165,6 +1165,9 @@ function SurveysView() {
                     Progress
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Category Performance
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Time Used
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1289,7 +1292,7 @@ function SurveysView() {
 }
 
 // -----------------------------------------
-// ProfilesView Component (NEW)
+// ProfilesView Component with ESLint fix
 // -----------------------------------------
 function ProfilesView() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -1297,11 +1300,7 @@ function ProfilesView() {
   const [searchTerm, setSearchTerm] = useState("");
   const [stats, setStats] = useState<any>(null);
 
-  useEffect(() => {
-    fetchProfiles();
-  }, []);
-
-  const fetchProfiles = async () => {
+  const fetchProfiles = useCallback(async () => {
     setLoading(true);
     try {
       console.log("Fetching profiles from /api/admin/profiles...");
@@ -1339,7 +1338,11 @@ function ProfilesView() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchProfiles();
+  }, [fetchProfiles]);
 
   if (loading) {
     return <div className="text-center py-8">Loading profiles...</div>;
@@ -1482,7 +1485,7 @@ function ProfilesView() {
 }
 
 // -----------------------------------------
-// AnalyticsView Component (UPDATED)
+// AnalyticsView Component
 // -----------------------------------------
 function AnalyticsView() {
   const [analytics, setAnalytics] = useState<any>(null);

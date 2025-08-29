@@ -72,6 +72,12 @@ const SurveyPage = () => {
 
   // New state for survey completion tracking
   const [hasTakenSurvey, setHasTakenSurvey] = useState(false);
+  const [surveyCompleted, setSurveyCompleted] = useState(false);
+  const [showRefreshWarning, setShowRefreshWarning] = useState(false);
+  const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -88,6 +94,117 @@ const SurveyPage = () => {
       checkSurveyStatusAndRedirect();
     }
   }, [status, router]);
+
+  // Auto-save functionality
+  const saveProgressToStorage = useCallback(async () => {
+    if (!session?.user?.email || Object.keys(answers).length === 0) return;
+
+    try {
+      setAutoSaveStatus("saving");
+
+      const progressData = {
+        userId: session.user.email,
+        answers,
+        currentQuestion,
+        timeSpent,
+        totalTimeUsed: 3600 - totalTimeLeft,
+        lastSaved: new Date().toISOString(),
+        surveyStartTime: surveyStartTime?.toISOString(),
+        questionStartTime,
+        assessmentMetadata,
+        userIntent,
+      };
+
+      localStorage.setItem(
+        "dhiti_survey_progress",
+        JSON.stringify(progressData)
+      );
+
+      setLastAutoSave(new Date());
+      setAutoSaveStatus("saved");
+
+      // Show 'saved' status briefly, then return to idle
+      setTimeout(() => setAutoSaveStatus("idle"), 2000);
+    } catch (error) {
+      console.error("Error saving progress:", error);
+      setAutoSaveStatus("error");
+      setTimeout(() => setAutoSaveStatus("idle"), 3000);
+    }
+  }, [
+    session,
+    answers,
+    currentQuestion,
+    timeSpent,
+    totalTimeLeft,
+    surveyStartTime,
+    questionStartTime,
+    assessmentMetadata,
+    userIntent,
+  ]);
+
+  // Load saved progress on component mount
+  const loadSavedProgress = useCallback(() => {
+    if (!session?.user?.email) return;
+
+    try {
+      const savedData = localStorage.getItem("dhiti_survey_progress");
+      if (!savedData) return;
+
+      const progressData = JSON.parse(savedData);
+
+      // Verify this saved data belongs to current user
+      if (progressData.userId !== session.user.email) return;
+
+      // Check if saved data is not too old (24 hours)
+      const savedTime = new Date(progressData.lastSaved);
+      const now = new Date();
+      const hoursDiff =
+        (now.getTime() - savedTime.getTime()) / (1000 * 60 * 60);
+
+      if (hoursDiff > 24) {
+        localStorage.removeItem("dhiti_survey_progress");
+        return;
+      }
+
+      // Restore saved progress
+      setAnswers(progressData.answers || {});
+      setCurrentQuestion(progressData.currentQuestion || 0);
+      setTimeSpent(progressData.timeSpent || {});
+
+      if (progressData.surveyStartTime) {
+        setSurveyStartTime(new Date(progressData.surveyStartTime));
+      }
+
+      if (progressData.totalTimeUsed) {
+        setTotalTimeLeft(Math.max(0, 3600 - progressData.totalTimeUsed));
+      }
+
+      if (progressData.assessmentMetadata) {
+        setAssessmentMetadata(progressData.assessmentMetadata);
+      }
+
+      if (progressData.userIntent) {
+        setUserIntent(progressData.userIntent);
+      }
+
+      setLastAutoSave(new Date(progressData.lastSaved));
+      console.log("Progress restored from auto-save:", {
+        answersRestored: Object.keys(progressData.answers || {}).length,
+        questionPosition: progressData.currentQuestion,
+        timeUsed: progressData.totalTimeUsed,
+      });
+    } catch (error) {
+      console.error("Error loading saved progress:", error);
+      localStorage.removeItem("dhiti_survey_progress");
+    }
+  }, [session]);
+
+  // Clear saved progress when survey is completed
+  const clearSavedProgress = useCallback(() => {
+    localStorage.removeItem("dhiti_survey_progress");
+    setLastAutoSave(null);
+    setAutoSaveStatus("idle");
+  }, []);
 
   const checkSurveyStatusAndRedirect = async () => {
     try {
@@ -201,7 +318,7 @@ const SurveyPage = () => {
         throw new Error("No questions found for your profile configuration");
       }
 
-      console.log(`🔍 Raw questions received: ${questions.length}`);
+      console.log(`📝 Raw questions received: ${questions.length}`);
 
       // NO DUPLICATION FILTER - Use all questions as received
       const questionsWithIds = questions.map(
@@ -236,7 +353,7 @@ const SurveyPage = () => {
       });
 
       console.log(
-        `🔍 After validation: ${validQuestions.length} valid questions`
+        `📝 After validation: ${validQuestions.length} valid questions`
       );
 
       setQuestions(validQuestions);
@@ -299,6 +416,9 @@ const SurveyPage = () => {
       if (intent.recommendedPath) {
         console.log("Assessment customized for:", intent.recommendedPath);
       }
+
+      // Load any saved progress after questions are loaded
+      loadSavedProgress();
     } catch (error) {
       console.error("Error loading questions from Firestore:", error);
       setQuestionsLoadError(
@@ -313,7 +433,42 @@ const SurveyPage = () => {
     setTimerActive(true);
     setQuestionStartTime(Date.now());
     setSurveyStartTime(new Date());
+    setSurveyCompleted(false); // Ensure survey is not marked as completed when starting
   };
+
+  // Auto-save timer - saves every 30 seconds when there are changes
+  useEffect(() => {
+    if (
+      !instructionsAccepted ||
+      surveyCompleted ||
+      Object.keys(answers).length === 0
+    ) {
+      return;
+    }
+
+    const autoSaveInterval = setInterval(() => {
+      saveProgressToStorage();
+    }, 30000); // Auto-save every 30 seconds
+
+    return () => clearInterval(autoSaveInterval);
+  }, [instructionsAccepted, surveyCompleted, answers, saveProgressToStorage]);
+
+  // Save progress when answers change (debounced)
+  useEffect(() => {
+    if (
+      !instructionsAccepted ||
+      surveyCompleted ||
+      Object.keys(answers).length === 0
+    ) {
+      return;
+    }
+
+    const saveTimeout = setTimeout(() => {
+      saveProgressToStorage();
+    }, 2000); // Debounce: save 2 seconds after last answer change
+
+    return () => clearTimeout(saveTimeout);
+  }, [answers, instructionsAccepted, surveyCompleted, saveProgressToStorage]);
 
   const toggleTheme = () => {
     const newTheme = !isDark;
@@ -479,7 +634,7 @@ const SurveyPage = () => {
       }
     });
 
-    console.log(`🔍 Validation Results:`);
+    console.log(`📋 Validation Results:`);
     console.log(`  - Total Questions: ${questions.length}`);
     console.log(`  - Required Questions: ${totalRequired}`);
     console.log(`  - Required Skipped: ${requiredSkipped}`);
@@ -547,7 +702,7 @@ const SurveyPage = () => {
       const technicalQuestionsCount = technicalQuestions.length;
       const qualitativeQuestionsCount = qualitativeQuestions.length;
 
-      console.log(`🔍 FINAL Question Classification for Scoring:`);
+      console.log(`📋 FINAL Question Classification for Scoring:`);
       console.log(`  - Total Questions Loaded: ${allQuestions.length}`);
       console.log(
         `  - Technical Questions (FOR SCORING): ${technicalQuestionsCount}`
@@ -684,7 +839,7 @@ const SurveyPage = () => {
       };
 
       // Debug logging to verify data before submission
-      console.log("🔍 Survey Data Debug Before Submission:", {
+      console.log("📋 Survey Data Debug Before Submission:", {
         totalQuestions: surveyData.totalQuestions,
         technicalQuestionsTotal: surveyData.technicalQuestionsTotal,
         qualitativeQuestionsTotal: surveyData.qualitativeQuestionsTotal,
@@ -715,6 +870,8 @@ const SurveyPage = () => {
 
       if (response.ok) {
         console.log("Survey submitted successfully:", result);
+        setSurveyCompleted(true); // Mark survey as completed to prevent refresh warnings
+        clearSavedProgress(); // Clear auto-saved progress since survey is now complete
 
         // Clear success message emphasizing technical-only scoring
         const technicalAnswered = technicalQuestions.filter(
@@ -724,21 +881,21 @@ const SurveyPage = () => {
           (q) => answers[q.id] !== undefined
         ).length;
 
-        const successMessage = `🎉 Assessment Completed Successfully!
+        const successMessage = `Assessment Completed Successfully!
 
-📊 TECHNICAL SCORE: ${technicalPercentage}% (${finalScore}/${technicalQuestionsCount})
-   └── Only technical questions count toward your score
+Technical Score: ${technicalPercentage}% (${finalScore}/${technicalQuestionsCount})
+   Only technical questions count toward your score
 
-🔍 RESPONSE SUMMARY:
+Response Summary:
    • Total Questions: ${surveyData.totalQuestions}
    • Technical Questions: ${technicalQuestionsCount} (${technicalAnswered} answered)
    • Qualitative Questions: ${qualitativeQuestionsCount} (${qualitativeAnswered} answered)
    
-📈 DIFFICULTY BREAKDOWN:
+Difficulty Breakdown:
    • Technical (Scored): Easy ${questionsByLevel.easy}, Medium ${questionsByLevel.medium}, Advanced ${questionsByLevel.advanced}
    • Qualitative (Analysis): Easy ${qualitativeBreakdown.easy}, Medium ${qualitativeBreakdown.medium}, Advanced ${qualitativeBreakdown.advanced}
 
-✅ All responses saved for analysis and career insights!
+All responses saved for analysis and career insights!
 
 Redirecting to detailed results...`;
 
@@ -799,6 +956,32 @@ Redirecting to detailed results...`;
     }
   }, [currentQuestion, instructionsAccepted]);
 
+  // Simplified refresh protection with auto-save backup
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      const surveyActive = instructionsAccepted && !surveyCompleted;
+      const hasAnswers = Object.keys(answers).length > 0;
+
+      if (surveyActive && hasAnswers) {
+        // Save progress one final time before leaving
+        saveProgressToStorage();
+
+        // Show minimal browser warning
+        event.returnValue =
+          "Your progress has been auto-saved and will be restored when you return.";
+        return "Your progress has been auto-saved and will be restored when you return.";
+      }
+    };
+
+    if (instructionsAccepted && !surveyCompleted) {
+      window.addEventListener("beforeunload", handleBeforeUnload);
+    }
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [instructionsAccepted, surveyCompleted, answers, saveProgressToStorage]);
+
   const validateCurrentQuestion = () => {
     const question = questions[currentQuestion];
     if (!question) return true; // If no question, consider valid
@@ -834,6 +1017,9 @@ Redirecting to detailed results...`;
     if (validationErrors[questionId]) {
       setValidationErrors((prev) => ({ ...prev, [questionId]: false }));
     }
+
+    // Trigger auto-save after answer change (will be debounced)
+    setAutoSaveStatus("idle");
   };
 
   const nextQuestion = () => {
@@ -975,7 +1161,7 @@ Redirecting to detailed results...`;
             getProgressBarColor={getProgressBarColor}
           />
 
-          {/* Clear assessment info showing scoring vs analysis separation */}
+          {/* Clear assessment info showing scoring vs analysis separation and auto-save status */}
           <div
             className={`text-xs mb-2 flex justify-between ${
               isDark ? "text-gray-500" : "text-gray-500"
@@ -999,6 +1185,24 @@ Redirecting to detailed results...`;
                 qualitative
               </span>{" "}
               | Progress: {currentQuestion + 1}/{questions.length}
+              {Object.keys(answers).length > 0 && (
+                <span className="ml-2">
+                  {autoSaveStatus === "saving" && (
+                    <span className="text-blue-500">Saving...</span>
+                  )}
+                  {autoSaveStatus === "saved" && (
+                    <span className="text-green-600">Auto-saved</span>
+                  )}
+                  {autoSaveStatus === "error" && (
+                    <span className="text-red-500">Save failed</span>
+                  )}
+                  {autoSaveStatus === "idle" && lastAutoSave && (
+                    <span className="text-gray-500">
+                      Last saved: {lastAutoSave.toLocaleTimeString()}
+                    </span>
+                  )}
+                </span>
+              )}
             </span>
             {session?.user && <span>Taking as: {session.user.email}</span>}
           </div>

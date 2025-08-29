@@ -5,8 +5,7 @@ import OpenAI from "openai";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey:
-    "REMOVED_SECRET",
+  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
 });
 
 interface IntentDetectionRequest {
