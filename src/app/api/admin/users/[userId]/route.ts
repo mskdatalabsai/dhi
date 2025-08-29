@@ -17,14 +17,15 @@ async function isAdmin(): Promise<boolean> {
 // GET specific user
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await firestoreDb.users.findById(params.userId);
+    const { userId } = await params;
+    const user = await firestoreDb.users.findById(userId);
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -47,13 +48,14 @@ export async function GET(
 // PUT update user
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { userId } = await params;
     const updates = await request.json();
 
     // Don't allow sensitive fields to be updated
@@ -61,7 +63,7 @@ export async function PUT(
     delete updates.id;
     delete updates.createdAt;
 
-    await firestoreDb.users.update(params.userId, updates);
+    await firestoreDb.users.update(userId, updates);
 
     return NextResponse.json({
       message: "User updated successfully",

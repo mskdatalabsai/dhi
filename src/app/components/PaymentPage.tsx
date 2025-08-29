@@ -19,7 +19,9 @@ const PaymentPage = () => {
     script.onerror = () => console.error("Failed to load Razorpay script");
     document.body.appendChild(script);
 
-    return () => document.body.removeChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
   }, []);
 
   const toggleTheme = () => {
@@ -33,10 +35,16 @@ const PaymentPage = () => {
       <Navbar isDark={isDark} toggleTheme={toggleTheme} />
       <div className="container mx-auto px-6 py-12 max-w-6xl pt-32">
         <div className="text-center mb-12">
-          <h2 className={`text-4xl font-bold mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>
+          <h2
+            className={`text-4xl font-bold mb-4 ${
+              isDark ? "text-white" : "text-gray-900"
+            }`}
+          >
             Complete Your Payment
           </h2>
-          <p className={`text-xl ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+          <p
+            className={`text-xl ${isDark ? "text-gray-300" : "text-gray-600"}`}
+          >
             Pay ₹99 to unlock your AI-powered career assessment
           </p>
         </div>
@@ -46,7 +54,10 @@ const PaymentPage = () => {
             <AssessmentPreview isDark={isDark} />
           </div>
           <div className="space-y-6">
-            <SecurePaymentCard isDark={isDark} razorpayLoaded={razorpayLoaded} />
+            <SecurePaymentCard
+              isDark={isDark}
+              razorpayLoaded={razorpayLoaded}
+            />
           </div>
         </div>
       </div>

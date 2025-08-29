@@ -24,6 +24,7 @@ export interface FirestoreQuestion {
   };
   correctOption: string;
   level?: "easy" | "Medium" | "Hard"; // Only for technical
+  caseName?: string;
 
   // Metadata
   createdAt?: Date;
@@ -37,4 +38,16 @@ export interface FirestoreQuestion {
   // Old fields for backward compatibility
   category?: string;
   caseId?: string;
+}
+export interface QuestionCase {
+  id: string;
+  caseNumber: number;
+  caseName: string;
+  description?: string;
+  questions: string[]; // Array of question IDs
+  createdAt?: Date;
+  updatedAt?: Date;
+  questionsByLevel?: object;
+  totalQuestions?: number;
+  isActive?: boolean;
 }

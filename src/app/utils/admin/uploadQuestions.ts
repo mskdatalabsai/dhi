@@ -55,6 +55,7 @@ export class QuestionUploader {
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
+      questions: [],
     };
 
     // Add case to batch
@@ -72,7 +73,15 @@ export class QuestionUploader {
         question: question.question,
         options: question.options,
         correctOption: question.correctOption,
-        level: question.level,
+        // Fix level casing to match FirestoreQuestion type
+        level:
+          question.level === "easy"
+            ? "easy"
+            : question.level === "medium"
+            ? "Medium"
+            : question.level === "advanced"
+            ? "Hard"
+            : undefined,
         caseId: caseId,
         caseName: caseData.caseName,
         createdAt: new Date(),
@@ -94,7 +103,13 @@ export class QuestionUploader {
   private static countQuestionsByLevel(questions: QuizQuestion[]) {
     return questions.reduce(
       (acc, question) => {
-        acc[question.level] = (acc[question.level] || 0) + 1;
+        if (
+          question.level === "easy" ||
+          question.level === "medium" ||
+          question.level === "advanced"
+        ) {
+          acc[question.level] = (acc[question.level] || 0) + 1;
+        }
         return acc;
       },
       { easy: 0, medium: 0, advanced: 0 }

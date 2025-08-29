@@ -346,13 +346,13 @@ const ResultPage: React.FC = () => {
           suggestedLearningPath={result.suggestedLearningPath}
           focusAreas={result.focusAreas}
           aiOptimized={result.aiOptimized}
-          detailedQuestions={result.questions.filter(
-            (q) => !q.isQualitative && q.countsTowardScore
-          )}
+          detailedQuestions={result.questions
+            .filter((q) => !q.isQualitative && q.countsTowardScore)
+            .map((q) => ({ ...q, id: q.questionId }))}
           allQuestionsCount={result.totalQuestions}
-          qualitativeQuestionsData={result.questions.filter(
-            (q) => q.isQualitative
-          )}
+          qualitativeQuestionsData={result.questions
+            .filter((q) => q.isQualitative)
+            .map((q) => ({ ...q, id: q.questionId }))}
         />
       </div>
 
