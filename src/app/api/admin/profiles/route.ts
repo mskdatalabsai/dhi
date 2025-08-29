@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Filter by search term if provided (client-side filtering for now)
+    // Filtered by search term if provided (client-side filtering for now)
     const filteredProfiles = search
       ? profiles.filter(
           (p) =>
