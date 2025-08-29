@@ -10,7 +10,7 @@ import {
   GraduationCap,
   Compass,
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
+import Navbar from "../components/Navbar";
 
 const AboutUsPage = () => {
   const [isDark] = useState(false);
