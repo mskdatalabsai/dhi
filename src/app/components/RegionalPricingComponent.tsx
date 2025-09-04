@@ -32,7 +32,7 @@ const RegionalPricingComponent: React.FC<RegionalPricingProps> = ({
         price: "95",
         region: locationData?.country_name || "India",
         message: "A small investment today. A lifetime of clarity tomorrow.",
-        buttonText: "Unlock My Career Path →",
+        buttonText: "Unlock My Career Path",
       };
     } else {
       return {
