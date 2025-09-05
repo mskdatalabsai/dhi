@@ -464,6 +464,8 @@ const ProfilePage = () => {
   );
 };
 
+// Replace your Section component at the bottom of profile/page.tsx with this:
+
 const Section = ({
   title,
   icon,
@@ -476,14 +478,14 @@ const Section = ({
   isDark: boolean;
 }) => (
   <div
-    className={`rounded-xl border transition-all duration-300 overflow-hidden ${
+    className={`rounded-xl border transition-all duration-300 ${
       isDark
         ? "bg-gray-800 border-gray-700"
         : "bg-white border-gray-200 shadow-sm hover:shadow-md"
     }`}
   >
     <div
-      className={`px-6 py-4 border-b ${
+      className={`px-6 py-4 border-b rounded-t-xl ${
         isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"
       }`}
     >
